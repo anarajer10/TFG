@@ -1,0 +1,36 @@
+services:
+  #Servicio de la BD
+  db:
+    image: mysql:8.0
+    container_name: mysql-db-tfg
+    restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${NAME_DB}
+      MYSQL_ROOT_PASSWORD: ${PASSWORD_DB}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${PASSWORD_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    #Servicion de la fastapi
+  backend:
+      build: .
+      container_name: fastapi-backend
+      ports:
+        - "8000:8000"
+      environment:
+        DATABASE_URL: ${URL_DB}
+      volumes:
+        - .:/code
+      depends_on:
+        db:
+          condition: service_healthy
+
+volumes:
+  mysql_data:

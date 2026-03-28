@@ -1,0 +1,30 @@
+.venv
+.venv/
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# BD
+*.db
+
+# logs
+*.log
+logs/
+
+# Archivos de prueba
+prueba_imagen.py
+prueba_pln.py
+
+# IDEs
+.vscode/
+
+# SO
+.DS_Store
+Thumbs.db
+desktop.ini
