@@ -6,6 +6,8 @@ from .RTVE_scrap import RTVEScraper
 from .Newtral_scrap import NewtralScraper
 from .APNews_scrap import APNewsScraper
 from .Snopes_scrap import SnopesScraper
+from .VeinteMin_scrap import VeinteMinScraper
+from .Independent_scrap import IndependentScraper
 
 def _get_or_create_fuente(session: Session, nombre: str, url: str, idioma: str) -> Fuente:
     fuente = session.exec(select(Fuente).where(Fuente.url == url)).first()
@@ -14,6 +16,87 @@ def _get_or_create_fuente(session: Session, nombre: str, url: str, idioma: str) 
         session.add(fuente)
         session.flush() # Para obtener el id sin hacer commit aún
     return fuente
+
+# Para el scraper de The Independent (noticias 'intermedias', ni verdaderas ni falsas)
+def run_scraper_TheIndependent(limit: int = 100):
+    scraper = IndependentScraper()
+    articles = scraper.scrape(limit=limit)
+
+    with Session(engine) as session:
+        count = 0
+        for article in articles:            # A LO MEJOR A LA LARGA SE AÑADEN MÁS COSAS
+            statement = select(Noticia).where(Noticia.texto_url == article["texto_url"])
+            existing = session.exec(statement).first()
+
+            if existing:
+                print(f"Ya existe: {article['texto_url']}")
+                continue
+
+            fuente = _get_or_create_fuente(
+                session,
+                nombre=article["nombre_fuente"],
+                url=article["url_fuente"],
+                idioma=article["idioma_fuente"]
+            )
+            
+            noticia = Noticia(                     # Lo mismo que se almacena en schema.py 
+                titulo=article["titulo"],
+                descripcion=article["descripcion"],
+                categoria=article["categoria"],
+                fecha_publi=article["fecha_publi"],
+                texto_url=article["texto_url"],
+                imagen_url=article.get("imagen_url"),
+                etiqueta=article["etiqueta"],
+                fuente_id=fuente.id
+            )
+            session.add(noticia)
+            count += 1
+
+        session.commit()
+
+        print(f"{len(articles)} noticias guardadas correctamente")
+        print(f"Articulos nuevos guardados: {count}")
+
+
+# Para el scraper de 20minutos.es (noticias 'intermedias', ni verdaderas ni falsas)
+def run_scraper_VeinteMin(limit: int = 100):
+    scraper = VeinteMinScraper()
+    articles = scraper.scrape(limit=limit)
+
+    with Session(engine) as session:
+        count = 0
+        for article in articles:            # A LO MEJOR A LA LARGA SE AÑADEN MÁS COSAS
+            statement = select(Noticia).where(Noticia.texto_url == article["texto_url"])
+            existing = session.exec(statement).first()
+
+            if existing:
+                print(f"Ya existe: {article['texto_url']}")
+                continue
+
+            fuente = _get_or_create_fuente(
+                session,
+                nombre=article["nombre_fuente"],
+                url=article["url_fuente"],
+                idioma=article["idioma_fuente"]
+            )
+            
+            noticia = Noticia(                     # Lo mismo que se almacena en schema.py 
+                titulo=article["titulo"],
+                descripcion=article["descripcion"],
+                categoria=article["categoria"],
+                fecha_publi=article["fecha_publi"],
+                texto_url=article["texto_url"],
+                imagen_url=article.get("imagen_url"),
+                etiqueta=article["etiqueta"],
+                fuente_id=fuente.id
+            )
+            session.add(noticia)
+            count += 1
+
+        session.commit()
+
+        print(f"{len(articles)} noticias guardadas correctamente")
+        print(f"Articulos nuevos guardados: {count}")
 
 # Para el scraper de Newtral.es (seccion de bulos)
 def run_scraper_Newtral(limit: int = 100):
@@ -220,5 +303,7 @@ if __name__ == "__main__":
     # run_scraper_Newtral(limit=50)
     # run_scraper_Maldita(limit=50) A LO MEJOR SE QUITA Y SE SUSTITUYE POR NEWTRAL
     # run_scraper_RTVE(limit=50)
-    run_scraper_APNews(limit=50) # Ha almacenado 47
+    # run_scraper_APNews(limit=50) # Ha almacenado 47
     # run_scraper_Snopes(limit=50) # Ha almacenado 47 también (EN TOTAL 194 noticias en la BD por ahora)
+    # run_scraper_VeinteMin(limit=50)
+    run_scraper_TheIndependent(limit=50)

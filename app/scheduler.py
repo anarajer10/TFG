@@ -3,7 +3,9 @@ from app.scrapers.runner_scraper import(
     run_scraper_RTVE,
     run_scraper_Newtral,
     run_scraper_APNews,
-    run_scraper_Snopes
+    run_scraper_Snopes,
+    run_scraper_VeinteMin,
+    run_scraper_TheIndependent
 )
 
 scheduler = BackgroundScheduler()
@@ -13,6 +15,8 @@ def _run_scrapers():
     run_scraper_Newtral(limit=20)
     run_scraper_APNews(limit=20)
     run_scraper_Snopes(limit=20)
+    run_scraper_VeinteMin(limit=20)
+    run_scraper_TheIndependent(limit=20)
 
 def start_scheduler():
     # Se hará el scraping una vez cada 24 horas

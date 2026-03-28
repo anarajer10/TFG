@@ -105,7 +105,8 @@ class APNewsScraper(ScraperBase):
                 # Para eliminar footer(entre otras cosas)
                 if any(palabra in text for palabra in[
                     'Copyright', 'All rights reserved', 'Follow AP',
-                    'Sign up', 'Suscribe', 'Newsletter', 'Cookie', 'Privacy Policy'
+                    'Sign up', 'Suscribe', 'Newsletter', 'Cookie', 'Privacy Policy',
+                    'Terms of Service', 'Log in', 'Cookie Policy'
                 ]):
                     continue
 
