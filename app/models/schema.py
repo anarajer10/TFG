@@ -3,6 +3,7 @@
 import enum
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Column, TEXT
+import sqlalchemy as sa
 from typing import Optional
 
 """""
@@ -86,7 +87,7 @@ class ValoracionBase(SQLModel): #Cambio de BaseModel a SQLModel
     # category: str
     resultado: EtiquetaEnum = Field(default=EtiquetaEnum.pendiente)
     probabilidad: float = Field(default=0.50, ge= 0.00, le= 1.00)
-    explicacion: str | None = None            # Justificación (NLP/LLM)
+    explicacion: str | None = Field(default=None, sa_column=Column(sa.Text))           # Justificación (NLP/LLM)
     punt_sentimiento: float | None = None     # Análisis de sentimientos (tono neutro, positivo o negativo)
     punt_objetividad: float | None = None     # Análisis de objetividad (imparcial o no)
     estatus_analisis_imagen: ImagenEnum = Field(default=ImagenEnum.pendiente) # Etiqueta para saber si es fiable, manipulada o creada artificialmente
