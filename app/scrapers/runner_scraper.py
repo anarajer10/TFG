@@ -1,7 +1,6 @@
 from sqlmodel import Session, select
 from app.database import engine
 from app.models.schema import Noticia, Fuente
-from .Maldita_scrap import MalditaScraper
 from .RTVE_scrap import RTVEScraper
 from .Newtral_scrap import NewtralScraper
 from .APNews_scrap import APNewsScraper
@@ -138,45 +137,6 @@ def run_scraper_Newtral(limit: int = 100):
         print(f"{len(articles)} noticias guardadas correctamente")
         print(f"Articulos nuevos guardados: {count}")   
 
-# Para el scraper de Maldita.es (Maldito Bulo)
-def run_scraper_Maldita(limit: int = 100):
-    scraper = MalditaScraper()
-    articles = scraper.scrape(limit=limit)
-
-    with Session(engine) as session:
-        count = 0
-        for article in articles:            # A LO MEJOR A LA LARGA SE AÑADEN MÁS COSAS
-            statement = select(Noticia).where(Noticia.texto_url == article["texto_url"])
-            existing = session.exec(statement).first()
-
-            if existing:
-                print(f"Ya existe: {article['texto_url']}")
-                continue
-
-            fuente = _get_or_create_fuente(
-                session,
-                nombre=article["nombre_fuente"],
-                url=article["url_fuente"],
-                idioma=article["idioma_fuente"]
-            )
-            
-            noticia = Noticia(                     # Lo mismo que se almacena en schema.py 
-                titulo=article["titulo"],
-                descripcion=article["descripcion"],
-                categoria=article["categoria"],
-                fecha_publi=article["fecha_publi"],
-                texto_url=article["texto_url"],
-                imagen_url=article.get("imagen_url"),
-                etiqueta=article["etiqueta"],
-                fuente_id=fuente.id
-            )
-            session.add(noticia)
-            count += 1
-
-        session.commit()
-
-        print(f"{len(articles)} noticias guardadas correctamente")
-        print(f"Articulos nuevos guardados: {count}")               # Núm. articulos por scrap hecho
 
 # Para el scraper de RTVE.es (noticias)
 def run_scraper_RTVE(limit: int = 100):
@@ -300,10 +260,9 @@ def run_scraper_Snopes(limit: int = 100):
 
 
 if __name__ == "__main__":
-    # run_scraper_Newtral(limit=50)
-    # run_scraper_Maldita(limit=50) A LO MEJOR SE QUITA Y SE SUSTITUYE POR NEWTRAL
-    # run_scraper_RTVE(limit=50)
-    # run_scraper_APNews(limit=50) # Ha almacenado 47
-    # run_scraper_Snopes(limit=50) # Ha almacenado 47 también (EN TOTAL 194 noticias en la BD por ahora)
-    # run_scraper_VeinteMin(limit=50)
-    run_scraper_TheIndependent(limit=50)
+    run_scraper_Newtral(limit=20)
+    run_scraper_RTVE(limit=20)
+    run_scraper_APNews(limit=20) # Ha almacenado 47
+    run_scraper_Snopes(limit=20) # Ha almacenado 47 también (EN TOTAL 194 noticias en la BD por ahora)
+    run_scraper_VeinteMin(limit=20)
+    run_scraper_TheIndependent(limit=20)
