@@ -4,6 +4,7 @@ import logging
 from pysentimiento import create_analyzer # type: ignore
 import spacy # type: ignore
 from dotenv import load_dotenv
+from langdetect import detect
 
 load_dotenv()
 
@@ -136,7 +137,11 @@ def analizar_texto(texto: str, titulo: str = "", lang: str = "es") -> dict:
         return resultado
     
     try:
-        lang = "es" if lang.lower() in ["es", "español", "spanish"] else "en"
+        try:
+            lang_detectado = detect(texto[:500])
+            lang = "es" if lang_detectado == "es" else "en"
+        except Exception:
+            lang = "es" if lang.lower() in ["es", "español", "spanish"] else "en"
 
         sentiment_analyzer, emotion_analyzer, nlp = _get_models(lang)
 

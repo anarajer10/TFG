@@ -3,11 +3,12 @@ import io
 import base64
 import requests
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from PIL import Image, ImageChops, ImageEnhance
 from dotenv import load_dotenv
 from app.models.schema import ImagenEnum
 from PIL.ExifTags import TAGS
+from app.modules.duckduckgo_image_search import analizar_coherencia_imagen
 
 load_dotenv()
 
@@ -20,7 +21,7 @@ CLIP_MODEL_URL = "https://router.huggingface.co/fal-ai/models/openai/clip-vit-la
 ELA_QUALITY = 90
 ELA_THRESHOLD = 15      # Umbral para considerar la manipulación de una imagen
 AI_THRESHOLD = 0.80     # Umbral de confianza para considerar a una imagen como hecha por IA
-CLIP_THRESHOLD = 0.20   # Umbral mínimo de similitud entre imagen y texto
+COHERENCIA_THRESHOLD = 0.26   # Umbral mínimo de coherencia entre el título y las imágenes que devuelve Google con respecto a la imagen de la noticia
 DIAS_CONTEXTO = 180     # Días de diferencia máxima entre fecha de los metadatos y fecha de la noticia
 
 # Con la url, descraga la imagen y devuelve sus bytes
@@ -137,44 +138,6 @@ def detectar_ia(imagen_bytes: bytes) -> tuple[bool, float]:
         return False, -1.0
 
 
-# analizar la coherencia entre el texto y su imagen asociada
-def analizar_clip(imagen_bytes: bytes, texto) -> float:
-    if not texto or not texto.strip():
-        return -1.0
-    
-    try:
-        imagen_b64 = base64.b64encode(imagen_bytes).decode("utf-8")
-
-        payload = {
-            "inputs": imagen_b64,
-            "parameters": {
-                "candidate_labels": [texto, "otra cosa aleatoria"]
-            }
-        }
-
-        response = requests.post(
-            CLIP_MODEL_URL,
-            headers={"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"},
-            json=payload,
-            timeout=30
-        )
-        response.raise_for_status()
-        resultado = response.json()
-
-        if isinstance(resultado, list):
-            for item in resultado:
-                if item["label"] == texto:
-                    return round(float(item["score"]), 4)
-        elif isinstance(resultado, dict) and "scores" in resultado:
-            return round(float(resultado["scores"][0]), 4)
-
-        return -1.0
-
-    except Exception as e:
-        logger.error(f"Error en el análisis CLIP: {e}")
-        return -1.0  
-
-# QUITAR?
 # Análisis de metadatos EXIF para averoguar si la foto está fuera de contexto
 def detectar_fuera_contexto(metadatos: dict, fecha_publi: datetime | None) -> bool:
     if not fecha_publi or "DateTime" not in metadatos:
@@ -202,7 +165,7 @@ def analizar_imagen(imagen_url: str, fecha_publi: datetime | None = None, titulo
         "ela_score": -1.0,
         "es_ia": -1.0,
         "confianza_ia": -1.0,
-        "clip_score": -1.0,
+        "coherencia_score": -1.0,
         "fuera_contexto": False,
         "metadatos": {}
     }
@@ -219,8 +182,7 @@ def analizar_imagen(imagen_url: str, fecha_publi: datetime | None = None, titulo
     resultado["metadatos"] = extraer_metadatos_exif(imagen_bytes)
 
     # análisis ELA
-    ela_score = analizar_ela(imagen_bytes)
-    resultado["ela_score"] = ela_score
+    resultado["ela_score"] = analizar_ela(imagen_bytes)
 
     # Detección de IA
     es_ia, confianza_ia = detectar_ia(imagen_bytes)
@@ -228,9 +190,9 @@ def analizar_imagen(imagen_url: str, fecha_publi: datetime | None = None, titulo
     resultado["confianza_ia"] = confianza_ia 
 
     # análisis CLIP
-    clip_score = analizar_clip(imagen_bytes, titulo)
-    resultado["clip_score"] = clip_score
-    clip_incoherencia = clip_score != -1.0 and clip_score < CLIP_THRESHOLD
+    coherencia_score = analizar_coherencia_imagen(imagen_url, titulo)
+    resultado["coherencia_score"] = coherencia_score
+    imagen_coherencia = (coherencia_score == 0.25 and resultado["ela_score"] > ELA_THRESHOLD * 0.7)
 
     # fuera contexto por fecha
     fuera_contexto = detectar_fuera_contexto(resultado["metadatos"], fecha_publi)
@@ -239,7 +201,7 @@ def analizar_imagen(imagen_url: str, fecha_publi: datetime | None = None, titulo
     # clasificación final
     if es_ia:
         resultado["estatus"] = ImagenEnum.generada_ia
-    elif fuera_contexto or ela_score > ELA_THRESHOLD or clip_incoherencia:
+    elif fuera_contexto or resultado["ela_score"] > ELA_THRESHOLD or imagen_coherencia:
         resultado["estatus"] = ImagenEnum.fuera_contexto
         resultado["fuera_contexto"] = True
     else:
