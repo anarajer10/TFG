@@ -20,7 +20,8 @@ dependencies = [
     "apscheduler (>=3.11.2,<4.0.0)",
     "pysentimiento>=0.7.3",
     "spacy>=3.8.13",
-    "pillow>=10.4.0"
+    "pillow>=10.4.0",
+    "langdetect (>=1.0.9,<2.0.0)"
 ]
 
 [tool.poetry]

@@ -20,14 +20,15 @@ services:
 
     #Servicion de la fastapi
   backend:
-      build: .
+      build: ./backend
       container_name: fastapi-backend
       ports:
         - "8000:8000"
       environment:
         DATABASE_URL: ${URL_DB}
       volumes:
-        - .:/code
+        - ./backend:/code
+        - ./.env:/code/.env
       depends_on:
         db:
           condition: service_healthy
