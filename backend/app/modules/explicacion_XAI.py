@@ -6,7 +6,8 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+# OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_URL = "http://host.docker.internal:11434/api/generate"
 OLLAMA_MODEL = "llama3.2:3b"
 
 # Interpretación de las métricas
@@ -144,6 +145,11 @@ def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str
 def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: str = "") -> str:
     prompt = _construir_prompt(resultado_imagen, resultado_texto, titulo)
 
+    # DEBUG: Para ver en la terminal del backend qué estamos enviando (QUITAR)
+    print(f"Intentando conectar con Ollama")
+    print(f"URL: {OLLAMA_URL}")
+    print(f"Modelo: {OLLAMA_MODEL}")
+
     try:
         response = requests.post(
             OLLAMA_URL,
@@ -151,16 +157,23 @@ def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: s
                 "model": OLLAMA_MODEL,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0.3, "num_predict": 1024}
+                "options": {"temperature": 0.3, "num_predict": 1024},
+                "keep_alive": "5m"
             },
-            timeout=120
+            timeout=180
         )
+        print(f"STATUS OLLAMA: {response.status_code}")
         response.raise_for_status()
         return response.json().get("response", "No se ha podido generar la explicación")
     
-    except requests.ConnectionError:
+    except requests.exceptions.ConnectionError as e:
         logger.error("Ollama no está ejecutándose")
-        return "El servicio de explicación no está disponible"
+        return (f"Debug error Ollama: {type(e).__name__} - {e}")
+    # return "El servicio de explicación no está disponible, no funciona"
+    
+    except requests.exceptions.Timeout as e:
+        logger.error(f" Timeout: {e}")
+        return "Timeout"
     
     except Exception as e:
         logger.error(f"Error generando la explicación XAI: {e}")

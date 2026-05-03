@@ -46,7 +46,7 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
         return None
     
     try:
-        logger.info("Análisis {noticia.titulo[:50]}")
+        logger.info(f"Análisis {noticia.titulo[:50]}")
 
         # Predicción principal con el modelo entrenado
         etiqueta_modelo, prob_falsa = predecir(noticia.titulo, noticia.descripcion)
@@ -70,9 +70,10 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
             resultado_texto = analizar_texto(f"{noticia.titulo}. {noticia.descripcion}", titulo=noticia.titulo, lang="es")
             val = EtiquetaEnum.falsa if prob_final >= 0.5 else EtiquetaEnum.verdadera
 
-        # Explicación XAI con Ollamas
+        # Explicación XAI con Ollama
         try:
             explicacion = generar_explicacion(resultado_imagen or {}, resultado_texto, titulo=noticia.titulo)
+            logger.info(f"Explicación generada: {explicacion[:1000]}")
         except Exception as e:
             logger.warning(f"XAI no disponible: {e}")
             indicadores = ", ".join(resultado_texto.get("indicadores", []))
