@@ -1,3 +1,4 @@
+import logging
 from apscheduler.schedulers.background import BackgroundScheduler # type: ignore
 from app.scrapers.runner_scraper import(
     run_scraper_RTVE,
@@ -7,6 +8,8 @@ from app.scrapers.runner_scraper import(
     run_scraper_VeinteMin,
     run_scraper_TheIndependent
 )
+
+logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler()
 
@@ -24,8 +27,8 @@ def start_scheduler():
     # Para que haga un scraping nada más encender el contenedor
     # scheduler.add_job(_run_scrapers)
     scheduler.start()
-    print("Scheduler activado")
+    logger.info("Scheduler activado")
 
 def stop_scheduler():
     scheduler.shutdown()
-    print("Scheduler desactivado")
+    logger.info("Scheduler desactivado")
