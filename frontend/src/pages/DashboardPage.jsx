@@ -67,7 +67,7 @@ export default function DashboardPage({ history }){
                     </div>
 
                     {/*Distribuciones*/}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1 fr", gap: 16, marginBottom: 16 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
                         <Card>
                             <SectionTitle>Distribución de resultados</SectionTitle>
                             <MetricBar label="Falsas" value={total ? falsas / total : 0} color={G.danger} />
@@ -94,7 +94,7 @@ export default function DashboardPage({ history }){
                     {/*Estado imágenes*/}
                     <Card style={{ marginBottom: 16 }}>
                         <SectionTitle>Estado del análisis de la imagen de la noticia</SectionTitle>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr", gap: 8 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                             {["autentica", "fuera_contexto", "generada_ia", "pendiente"].map(st => {
                                 const cnt = history.filter(r => r.valoracion.estatus_analisis_imagen === st).length;
                                 const meta = imagenMeta(st);

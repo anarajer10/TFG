@@ -25,7 +25,7 @@ export function imagenMeta(estatus){
         autentica: {label: "Imagen auténtica", color: G.ok, icon: "✓"},
         fuera_contexto: {label: "Fuera de contexto", color: G.warn, icon: "?"},
         generada_ia: {label: "Generada por IA", color: G.danger, icon: "✕"},
-        sin_analizar: {label: "Sin analizar", color: G.muted, icon: "-"},
+        pendiente: {label: "Sin analizar", color: G.muted, icon: "-"},
     };
     return map[estatus] ?? { label: estatus, color: G.muted, icon: "-" };
 }

@@ -1,15 +1,15 @@
 // Todas las llamadas al backend van aquí
 // La URL base se lee de la variable de entorno VITE_API_BASE (en el .env)
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
-async function request(path, options = {}){
+async function request(path, options = {}, timeout = 300000){
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 min d timeout
-    
+    const timeoutId = setTimeout(() => controller.abort(), timeout); // 5 min d timeout (los 300000 ms)
+    const isBodyRequest = ["POST", "PUT", "PATCH"].includes(options.method?.toUpperCase());
     try{
         const res = await fetch(`${API_BASE}${path}`, {
-            headers: {"Content-Type": "application/json"},
+            headers: isBodyRequest ? {"Content-Type": "application/json"} : {},
             signal: controller.signal,
             ...options,
         });
@@ -33,6 +33,11 @@ export async function analizarNoticia(noticiaCreate){
         method: "POST",
         body: JSON.stringify(noticiaCreate),
     });
+}
+
+// GET /extraer
+export async function extraerNoticia(url){
+    return request(`/extraer?url=${encodeURIComponent(url)}`, {}, 30000); // 30 segundos
 }
 
 // GET /noticias

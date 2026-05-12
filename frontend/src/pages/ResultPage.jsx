@@ -4,7 +4,7 @@ import { MetricBar, ScoreDial } from "../components/shared";
 import { clamp, imagenMeta, sentimientoLabel, confianzaLabel, formatFecha } from "../utils/formatters";
 
 export default function ResultPage({ result, onBack }) {
-    const { valoracion, noticia } = result;
+    const { valoracion, noticia, fuente_nombre } = result;
 
     const vMeta = (() => {
         const m = {
@@ -68,7 +68,7 @@ export default function ResultPage({ result, onBack }) {
                         {Math.round(valoracion.probabilidad * 100)}
                     </div>
                     <div style={{ color: G.textSub, fontSize: 11 }}>
-                        %probabilidad falsa
+                        % probabilidad falsa
                     </div>
                 </div>
             </div>
@@ -167,12 +167,13 @@ export default function ResultPage({ result, onBack }) {
                 <SectionTitle>Datos de la noticia</SectionTitle>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     {[
+                        { k: "Fuente", v: fuente_nombre || "-"},
                         { k: "Categoría", v: noticia.categoria || "-" },
                         { k: "URL", v: noticia.texto_url || "-" },
                         { k: "Fecha publicación", v: formatFecha(noticia.fecha_publi) },
                         { k: "id análisis", v: `#${valoracion.id}` },
                     ].map(({ k, v }) => (
-                        <div key={k} style={{ padding: "8px 0", borderBottom: `1px solid ${G.border}` }}>
+                        <div key={k} style={{ padding: "8px 0", borderBottom: `1px solid ${G.border}`, minWidth: 0 }}>
                             <div style={{ color: G.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>{k}</div>
                             <div style={{
                                 fontFamily: fonts.mono, fontSize: 12, marginTop: 2,

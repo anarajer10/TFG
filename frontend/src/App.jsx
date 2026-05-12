@@ -26,7 +26,7 @@ const globalCss = `
 
 export default function App(){
   const [page, setPage] = useState("analyze");
-  const { loading, result, history, analyze, clearResult } = useAnalysis();
+  const { loading, error, result, history, analyze, clearResult } = useAnalysis();
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -66,7 +66,7 @@ export default function App(){
     if (page === "dashboard"){
       return <DashboardPage history={history} />;
     }
-    return <AnalyzePage onAnalyze={handleAnalyze} loading={loading} />
+    return <AnalyzePage onAnalyze={handleAnalyze} loading={loading} error={error} />
   }
   
   // Luego cambiar con React Router

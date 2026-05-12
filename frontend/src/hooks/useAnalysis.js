@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { analizarNoticia } from "../services/api";
-import { buildDemoValoracion, buildDemoNoticia } from "../utils/demoData";
 
 export function useAnalysis(){
     const [loading, setLoading] = useState(false);
@@ -22,23 +21,25 @@ export function useAnalysis(){
             fecha_publi:    formData.fecha_publi || null,
             fuente_id:      null,
             etiqueta:       "pendiente",
+            fuente_nombre:  formData.fuente_nombre?.trim() || null,
         };
 
         try{
-            const valoracion = await analizarNoticia(noticiaCreate);
-            console.log("Recibido de backend", valoracion); //quitar
-            const entry = {valoracion, noticia: noticiaCreate};
+            const resultado = await analizarNoticia(noticiaCreate);
+            const entry = {
+                valoracion: resultado.valoracion,
+                noticia: resultado.noticia,
+                fuente_nombre: resultado.fuente_nombre,
+            };
             setResult(entry);
             setHistory(prev => [entry, ...prev]);
         }catch(err){
             console.error("Error de la API:", err);
-            //console.log("API no disponible, usando modo demo: ", err.message);
-            // El modo demo genera datos simulados para seguir desarrollando el frontend
-            //const noticia = buildDemoNoticia(noticiaCreate);
-            //const valoracion = buildDemoValoracion(noticia.id);
-            //const entry = {valoracion, noticia};
-            //setResult(entry);
-            //setHistory(prev => [entry, ...prev]);
+            let msg = err.message;
+            if (err.name === "AbortError") // timeout
+                msg = "La solicitud ha tardado demasiado, inténtalo otra vez.";
+            else if (err.message === "Failed to fetch") // Cuando el backend está caído
+                msg = "No se ha podido conectar con el servidor, comprueba que el backend esté conectado."
             setError(err.message);
         }finally{
             setLoading(false);

@@ -32,7 +32,7 @@ export function Navbar({ page, setPage }){
                         padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer",
                         fontFamily: fonts.body, fontSize: 13, fontWeight: 500,
                         background: page === id ? G.accentLo: "transparent",
-                        color: page === id ? G.accent: "textSub",
+                        color: page === id ? G.accent: G.textSub,
                         transition: "all 0.15s",
                     }}>
                         {label}
@@ -96,62 +96,3 @@ export function ScoreDial({ value, label }){
     );
 }
 
-// Header del veredicto (una barra superior con el resultado)
-export function VeredictoHeader({ valoracion, titulo }){
-    const metaMap = {
-        falsa: {label: "NOTICIA FALSA", color: G.danger, bg: G.dangerLo, icon: "✕"},
-        verdadera: {label: "NOTICIA VERDADERA", color: G.ok, bg: G.okLo, icon: "✓"},
-        pendiente: {label: "INDETERMINADO", color: G.warn, bg: G.warnLo, icon: "?"},
-    };
-    const meta = metaMap[valoracion.resultado] ?? metaMap.pendiente;
-    const conf = confianzaLabel(valoracion.probabilidad);
-
-    return(
-        <div style={{
-            background: meta.bg,
-            border: `1px solid ${meta.color}44`,
-            borderRadius: 16, padding: "24px 28px",
-            display: "flex", alignItems: "center", gap: 20,
-            marginBottom: 24,
-        }}>
-            <div style={{
-                width: 52, height: 52, borderRadius: "50%",
-                background: meta.color+"33", border: `2px solid ${meta.color}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 22, color: meta.color, fontWeight: 700,
-                fontFamily: fonts.display, flexShrink: 0,
-            }}>
-                {meta.icon}
-            </div>
-
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                    fontFamily: fonts.display, fontSize: 20, fontWeight: 800,
-                    color: meta.color, letterSpacing: "-0.02em",
-                }}>
-                    {meta.label}
-                </div>
-                <div style={{ 
-                    color: G.textSub, fontSize: 13, marginTop: 2,
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" 
-                }}>
-                    {titulo}
-                </div>
-                <div style={{ marginTop: 6 }}>
-                    <span style={{ fontSize: 11, color: conf.color, fontFamily: fonts.mono }}>
-                        Confianza {conf.label}
-                    </span>
-                </div>
-            </div>
-
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{
-                    fontFamily: fonts.mono, fontSize: 36, fontWeight: 700, color: meta.color,
-                }}>
-                    {Math.round(valoracion.probabilidad*100)}
-                </div>
-                <div style={{ color: G.textSub, fontSize: 11 }}>% probabilidad falsa</div>
-            </div>
-        </div>
-    );
-}
