@@ -1,14 +1,16 @@
 # La explicación XAI se hace con Ollama (llama3.2:3b)
 # Recibe los resultados de ambos análisis y genera una explicación en lenguaje natural con una justificación
-
+import os
 import logging
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_URL = "http://host.docker.internal:11434/api/generate"
-OLLAMA_MODEL = "llama3.2:3b"
+OLLAMA_URL = os.getenv("OLLAMA_URL")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")
 
 # Interpretación de las métricas
 
@@ -53,7 +55,7 @@ def _interpretar_sentimiento(sentimiento: str, punt: float) -> str:
     mapa = {
         "POS": "positivo",
         "NEG": "negativo",
-        "NEU": "neutro,"
+        "NEU": "neutro"
     }
 
     sent_texto = mapa.get(sentimiento, sentimiento)
@@ -73,9 +75,9 @@ def _interpretar_emocion(emocion: str) -> str:
     if not emocion or emocion == "-":
         return "No se ha detectado una emoción destacable en el texto"
     if emocion.lower() in emociones:
-        return f"Se detecta una emoción, concretamente '{emocion}, indicando un tono poco objetivo"
+        return f"Se detecta una emoción, concretamente '{emocion}', indicando un tono poco objetivo"
     
-    return f"Se ha detectado una emoción en el texto, '{emocion}"
+    return f"Se ha detectado una emoción en el texto, '{emocion}'"
 
 def _interpretar_indicadores(indicadores: list) -> str:
     if not indicadores:
@@ -145,11 +147,6 @@ def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str
 def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: str = "") -> str:
     prompt = _construir_prompt(resultado_imagen, resultado_texto, titulo)
 
-    # DEBUG: Para ver en la terminal del backend qué estamos enviando (QUITAR)
-    print(f"Intentando conectar con Ollama")
-    print(f"URL: {OLLAMA_URL}")
-    print(f"Modelo: {OLLAMA_MODEL}")
-
     try:
         response = requests.post(
             OLLAMA_URL,
@@ -162,7 +159,7 @@ def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: s
             },
             timeout=180
         )
-        print(f"STATUS OLLAMA: {response.status_code}")
+        logger.debug(f"STATUS OLLAMA: {response.status_code}")
         response.raise_for_status()
         return response.json().get("response", "No se ha podido generar la explicación")
     

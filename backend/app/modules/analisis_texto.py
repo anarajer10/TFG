@@ -1,10 +1,9 @@
-import re
 import os
 import logging
 from pysentimiento import create_analyzer # type: ignore
 import spacy # type: ignore
 from dotenv import load_dotenv
-from langdetect import detect
+from langdetect import detect # type: ignore
 
 load_dotenv()
 
@@ -28,7 +27,7 @@ def _get_models(lang:str):
         if _sentiment_es is None:
             _sentiment_es = create_analyzer(task="sentiment", lang="es")
             # Modelo que se usa en español
-            print(f"Modelo español cargado: {_sentiment_es.model.config._name_or_path}")
+            # print(f"Modelo español cargado: {_sentiment_es.model.config._name_or_path}")
         if _emotion_es is None:
             _emotion_es = create_analyzer(task="emotion", lang="es")
         if _nlp_es is None:
@@ -38,21 +37,12 @@ def _get_models(lang:str):
         if _sentiment_en is None:
             _sentiment_en = create_analyzer(task="sentiment", lang="en")
             # Lo mismo en inglés
-            print(f"Modelo inglés cargado: {_sentiment_en.model.config._name_or_path}")
+            # print(f"Modelo inglés cargado: {_sentiment_en.model.config._name_or_path}")
         if _emotion_en is None:
             _emotion_en = create_analyzer(task="emotion", lang="en")
         if _nlp_en is None:
             _nlp_en = spacy.load("en_core_web_sm")
         return _sentiment_en, _emotion_en, _nlp_en
-    
-# Palabras que pueden ser subjetivas o denotar emoción
-PALABRAS_ES = ["escandaloso", "escándalo", "brutal", "devastador", "catastrófico", "alarmante",
-               "terrible", "horrible", "increíble", "impactante", "urgente", "peligroso",
-               "secreto", "prohibido", "revelado", "exclusivo", "bomba", "expuesto"]
-
-PALABRAS_EN = ["shocking", "scandal", "brutal", "devastating", "catastrophic", "alarming",
-               "terrible", "horrible", "incredible", "impactful", "urgent", "dangerous",
-               "secret", "banned", "revealed", "exclusive", "bombshell", "exposed"]
 
 
 # Preprocesamiento de texto(tokenización, stop words, lematización y NER)
@@ -96,12 +86,6 @@ def _calcular_objetividad(texto: str, prep: dict, lang: str) -> float:
     # Adverbios y adjetivos intensificadores
     ratio_intensificadores = len(prep["intensificadores"])/total_palabras
     penalizacion += min(ratio_intensificadores*2, 0.3)
-
-    # palabras subjetivas o con emoción
-    palabras_subj = PALABRAS_ES if lang == "es" else PALABRAS_EN
-    texto_minusculas = texto.lower()
-    count_subj = sum(1 for p in palabras_subj if p in texto_minusculas)
-    penalizacion += min(count_subj*0.05, 0.25)
 
     # palabras en mayúsculas (exluyendo siglas de menos de 3 letras)
     palabras_mayusc = [p for p in palabras if p.isupper() and len(p) > 3]
@@ -172,18 +156,12 @@ def analizar_texto(texto: str, titulo: str = "", lang: str = "es") -> dict:
         resultado["prob_emocion"] = {k: round(v, 4) for k, v in emotion_result.probas.items()}
 
         # análisis de objetividad con spacy
-        resultado["punt_objetividad"] = _calcular_objetividad(texto, prep, lang)
+        objetividad_heu = _calcular_objetividad(texto, prep, lang)
+        prob_neu = probas.get("NEU", 0.5)
+        resultado["punt_objetividad"] = round(prob_neu * 0.6 + objetividad_heu * 0.4, 4)
 
         # indicadores de sensacionalismo
         indicadores = []
-        palabras_subj = PALABRAS_ES if lang == "es" else PALABRAS_EN
-        texto_minusc = texto.lower()
-
-        texto_limpio = re.sub(r'[¡!¿?.,;]', '', texto_minusc)
-
-        for palabra in palabras_subj:
-            if palabra.lower() in texto_limpio:
-                indicadores.append(f"lenguaje subjetivo:{palabra}")
 
         if texto.count("!") > 2:
             indicadores.append("exclamaciones excesivas")
@@ -192,6 +170,25 @@ def analizar_texto(texto: str, titulo: str = "", lang: str = "es") -> dict:
         palabras_mayusc = [p for p in palabras if p.isupper() and len(p) > 3]
         if len(palabras_mayusc)/max(len(palabras), 1) > 0.1:
             indicadores.append("exceso de mayúsculas")
+
+        # emoción dominante como indicador de sensacionalismo
+        emociones_alerta = {"anger", "fear", "disgust"}
+        if emotion_result.output.lower() in emociones_alerta:
+            indicadores.append(f"emoción dominante: {emotion_result.output.lower()}")
+
+        # densidad de entidades nombradas
+        if len(prep["entidades"]) / max(len(palabras), 1) < 0.02:
+            indicadores.append("pocas entidades nombradas")
+
+        # diversidad léxica
+        if len(prep["lemas"]) > 10: 
+            ttr = len(set(prep["lemas"])) / len(prep["lemas"])
+            if ttr < 0.4:
+                indicadores.append("baja diversidad léxica")
+
+        # citas directas
+        if texto.count('"') < 2 and len(texto) > 300:
+            indicadores.append("sin citas directas")
 
         resultado["indicadores"] = indicadores
 
