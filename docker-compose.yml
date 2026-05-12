@@ -4,7 +4,7 @@ services:
     image: mysql:8.0
     container_name: mysql-db-tfg
     restart: always
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --bind-address=0.0.0.0
     environment:
       MYSQL_DATABASE: ${NAME_DB}
       MYSQL_ROOT_PASSWORD: ${PASSWORD_DB}
@@ -13,25 +13,39 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${PASSWORD_DB}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${PASSWORD_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 20s
 
-    #Servicion de la fastapi
+  #Servicio de la fastapi
   backend:
-      build: ./backend
-      container_name: fastapi-backend
-      ports:
-        - "8000:8000"
-      environment:
-        DATABASE_URL: ${URL_DB}
-      volumes:
-        - ./backend:/code
-        - ./.env:/code/.env
-      depends_on:
-        db:
-          condition: service_healthy
+    build: ./backend
+    container_name: fastapi-backend
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${URL_DB}
+      OLLAMA_URL: ${OLLAMA_URL}
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/code
+      - ./.env:/code/.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: react-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   mysql_data:

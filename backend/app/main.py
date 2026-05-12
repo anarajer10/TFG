@@ -29,7 +29,7 @@ app.add_middleware(
 
 @app.get("/")
 def hello():
-    return {"msg": "Primera pureba"}
+    return {"msg": "Primera prueba"}
 
 app.include_router(new_router)
 

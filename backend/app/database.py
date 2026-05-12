@@ -1,6 +1,7 @@
 import os
+import time
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends
+# from fastapi import FastAPI, Depends
 from sqlmodel import create_engine, Session, SQLModel
 
 load_dotenv()
@@ -17,16 +18,26 @@ database_url = os.getenv('DATABASE_URL')
 if not database_url:
     #mysqlclient
     database_url = f'{db_driver}://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4' # Hay que guardarlo todo, sino no tiene sentido
-else:
-    pass
 
 
-engine = create_engine(database_url, echo=True, connect_args={"charset": "utf8mb4"})
+engine = create_engine(database_url, echo=False, connect_args={"charset": "utf8mb4"})
 
 # Para crear las tablas
 def init_db():
     from app.models.schema import Noticia, Valoracion, Fuente 
-    SQLModel.metadata.create_all(engine)
+    reintentos = 10
+    for intento in range(reintentos):
+        try:
+            SQLModel.metadata.create_all(engine)
+            return
+        except Exception as e:
+            if intento < reintentos-1:
+                print(f"La BD aún no está lista. ({intento+1}/{reintentos})")
+                engine.dispose()
+                time.sleep(3)
+            else:
+                raise
+    
 
 # Para obtener la sesión
 def get_session():
