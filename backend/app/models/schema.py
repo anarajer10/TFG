@@ -50,7 +50,7 @@ class FuenteCreate(FuenteBase):
 
 class NoticiaBase(SQLModel):
     #Para añadir más validaciones, con Field
-    titulo: str 
+    titulo: str = Field(min_length=10)
     # subtitle: str | None = None
     descripcion: str = Field(sa_column=Column(TEXT))
     categoria: str | None = None              # None si la noticia está pendiente
@@ -69,7 +69,8 @@ class NoticiaPublic(NoticiaBase):
     id: int
 
 class NoticiaCreate(NoticiaBase):
-    pass
+    # Se almacena el nombre de la fuente como dato de entrada (no como columna inicial en la BD)
+    fuente_nombre: str | None = None
 
 # Como se ha eliminado el Update de la API, de momento esto se deja comentado
 """
@@ -99,3 +100,8 @@ class Valoracion(ValoracionBase, table=True):
 class ValoracionPublic(ValoracionBase):
     id: int
     fecha_analisis: datetime 
+
+class AnalisisResultado(SQLModel):
+    noticia: NoticiaPublic
+    valoracion: ValoracionPublic
+    fuente_nombre: str | None = None # Evita una segunda llamada a GET /fuentes/{id}
