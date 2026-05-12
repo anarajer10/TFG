@@ -20,7 +20,16 @@ vectorizer.pkl
 # Dataset y sus métricas
 dataset.csv
 dataset.json
+dataset_es.csv
+dataset_en.csv
+dataset_completo.csv
+dataset_fakenews/
+dataset_liar/
+
+# Métricas y comparaciones de los algoritmos
 metricas.json
+metricas_*.json
+comparativa_*.json
 
 # BD
 *.db
