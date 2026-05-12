@@ -29,7 +29,12 @@ def generar_dataset(salida_csv: str = "dataset.csv", salida_json: str = "dataset
         # para entrenar son el título y la descripción
         titulo = noticia.titulo or ""
         descripcion = noticia.descripcion or ""
-        texto = f"{titulo}. {descripcion}".strip()
+
+        # Para las noticias de fact-checkers, solo el titulo es el claim, la descripción es donde se desmiente
+        if noticia.categoria == "Fact-Check":
+            texto = titulo.strip()
+        else:
+            texto = f"{titulo}. {descripcion}".strip()
 
         if not texto or len(texto) < 10:
             continue

@@ -2,51 +2,74 @@
 import pickle
 import os
 import logging
+from langdetect import detect # type: ignore
 
 logger = logging.getLogger(__name__)
 
 # Rutas a los archivos del modelo
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MODELO_PATH = os.path.join(_BASE_DIR, "modelo_fake_news.pkl")
-VECTORIZER_PATH = os.path.join(_BASE_DIR, "vectorizer.pkl")
+_RUTAS = {
+    "es": (
+        os.path.join(_BASE_DIR, "modelo_es.pkl"),
+        os.path.join(_BASE_DIR, "vectorizer_es.pkl"),
+    ),
+    "en": (
+        os.path.join(_BASE_DIR, "modelo_en.pkl"),
+        os.path.join(_BASE_DIR, "vectorizer_en.pkl"),
+    ),
+}
 
 # Solo se cargan la primera vez
-_modelo = None
-_vectorizer = None
+_modelos = {"es": None, "en": None}
+_vectorizers = {"es": None, "en": None}
 
-def _cargar_modelo():
-    global _modelo, _vectorizer
+def _detectar_idioma(texto: str) -> str:
+    try:
+        lang = detect(texto[:300])
+        return lang if lang in _RUTAS else "es"
+    except Exception:
+        return "es"
 
-    if _modelo is not None:
+def _cargar_modelo(lang: str) -> bool:
+
+    if _modelos[lang] is not None:
         return True
     
-    if not os.path.exists(MODELO_PATH) or not os.path.exists(VECTORIZER_PATH):
-        logger.error("No se han encontrado el modelo_fake_news.pkl y/o el vectorizer.pkl")
+    modelo_path, vectorizer_path = _RUTAS[lang]
+    
+    if not os.path.exists(modelo_path) or not os.path.exists(vectorizer_path):
+        logger.error(f"No se han encontrado los archivos .pkl del modelo '{lang}'")
         return False
     
     try:
-        with open(MODELO_PATH, "rb") as f:
-            _modelo = pickle.load(f)
-        with open(VECTORIZER_PATH, "rb") as f:
-            _vectorizer = pickle.load(f)
-        logger.info("Modelo de fakenews cargado")
+        with open(modelo_path, "rb") as f:
+            _modelos[lang] = pickle.load(f)
+        with open(vectorizer_path, "rb") as f:
+            _vectorizers[lang] = pickle.load(f)
+        logger.info(f"Modelo '{lang}' de fakenews cargado")
         return True
     except Exception as e:
-        logger.error(f"Error cargando el modelo: {e}")
+        logger.error(f"Error cargando el modelo '{lang}': {e}")
         return False
     
 # Predicción de noticias reales/falsas usando el modelo entrenado
 def predecir(titulo: str, descripcion: str) -> tuple[str, float]:
-    if not _cargar_modelo():
-        return "pendiente", 0.5
-    
     texto = f"{titulo}. {descripcion}".strip()
     if not texto or len(texto) < 5:
         return "pendiente", 0.5
     
+    lang = _detectar_idioma(texto)
+
+    # Si falla el modelo del idioma detectado, se intenta con el español como fallback
+    if not _cargar_modelo(lang):
+        if lang != "es" and _cargar_modelo("es"):
+            lang = "es"
+        else:
+            return "pendiente", 0.5
+    
     try:
-        X = _vectorizer.transform([texto])
-        prob_falsa = float(_modelo.predict_proba(X)[0][1])
+        X = _vectorizers[lang].transform([texto])
+        prob_falsa = float(_modelos[lang].predict_proba(X)[0][1])
         etiqueta = "falsa" if prob_falsa >= 0.5 else "verdadera"
         return etiqueta, round(prob_falsa, 4)
     
