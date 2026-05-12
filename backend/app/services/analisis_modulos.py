@@ -27,6 +27,17 @@ def _ajustar_con_imagen(prob_falsa: float, resultado_imagen: dict | None) -> flo
 
     return round(prob_falsa, 4)
 
+# Ajusta la probabilidad del modelo con el análisis realizado del texto
+def _ajustar_con_texto(prob_falsa: float, resultado_texto: dict) -> float:
+    ajuste = 0.0
+
+    if resultado_texto.get("punt_objetividad", 1.0) < 0.4:
+        ajuste += 0.05
+    if resultado_texto.get("punt_sentimiento", 0.0) < -0.3:
+        ajuste += 0.05
+
+    return round(min(prob_falsa + ajuste, 1.0), 4)
+
 # Nivel de confianza de la predicción
 def _nivel_confianza(prob_falsa: float) -> str:
     distancia = abs(prob_falsa - 0.5)
@@ -55,19 +66,23 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
         # análisis imagen
         resultado_imagen = None
         if noticia.imagen_url:
-            resultado_imagen = analizar_imagen(noticia.imagen_url, fecha_publi=noticia.fecha_publi, titulo=noticia.titulo)
+            resultado_imagen = analizar_imagen(noticia.imagen_url, fecha_publi=noticia.fecha_publi, titulo=noticia.titulo, texto_url=noticia.texto_url or "")
 
         # Ajuste multimodal, para ver si la imagen refuerza la predicción
         prob_final = _ajustar_con_imagen(prob_falsa, resultado_imagen)
-        confianza = _nivel_confianza(prob_final)
 
+        # análisis del texto
+        texto_completo = f"{noticia.titulo}. {noticia.descripcion}"
+        resultado_texto = analizar_texto(texto_completo, titulo=noticia.titulo) 
+            
+        prob_final = _ajustar_con_texto(prob_final, resultado_texto)
+        confianza = _nivel_confianza(prob_final)
+        
         # Valoración final
         if etiqueta_modelo == "pendiente":
-            resultado_texto = analizar_texto(f"{noticia.titulo}. {noticia.descripcion}", titulo=noticia.titulo) 
             val = (EtiquetaEnum.falsa if resultado_texto["punt_objetividad"] < 0.45 else EtiquetaEnum.verdadera)
             prob_final = 0.5
         else:
-            resultado_texto = analizar_texto(f"{noticia.titulo}. {noticia.descripcion}", titulo=noticia.titulo, lang="es")
             val = EtiquetaEnum.falsa if prob_final >= 0.5 else EtiquetaEnum.verdadera
 
         # Explicación XAI con Ollama
@@ -79,10 +94,10 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
             indicadores = ", ".join(resultado_texto.get("indicadores", []))
             sin_indicadores = indicadores or "ninguno"
             explicacion = (
-                f"Clasificada como {val.value} con probabilidad {prob_final: .0%}"
-                f"Confianza: {confianza}"
-                f"Emoción dominante: {resultado_texto.get('emocion', '-')}"
-                f"Indicadores: {sin_indicadores}"
+                f"Clasificada como {val.value} con probabilidad {prob_final:.0%}. "
+                f"Confianza: {confianza}. "
+                f"Emoción dominante: {resultado_texto.get('emocion', '-')}. "
+                f"Indicadores: {sin_indicadores}."
             )
 
         # Y por último, se guarda la valoración
@@ -103,7 +118,7 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
         session.add(noticia)
         session.commit()
 
-        logger.info(f"Resultado final: {val} ({prob_final:.2f}) con una confianza del {confianza} %")
+        logger.info(f"Resultado final: {val} ({prob_final:.2f}) con una confianza {confianza}")
 
         return nueva_val
 
