@@ -49,7 +49,7 @@ def _nivel_confianza(prob_falsa: float) -> str:
         return "baja"    
 
 # Orquestador del análisis de noticias
-def procesar_analisis_noticia(session: Session, noticia_id: int):
+def procesar_analisis_noticia(session: Session, noticia_id: int, lang: str = "es"):
 
     noticia = session.get(Noticia, noticia_id)
     if not noticia:
@@ -60,7 +60,7 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
         logger.info(f"Análisis {noticia.titulo[:50]}")
 
         # Predicción principal con el modelo entrenado
-        etiqueta_modelo, prob_falsa = predecir(noticia.titulo, noticia.descripcion)
+        etiqueta_modelo, prob_falsa = predecir(noticia.titulo, noticia.descripcion, lang=lang)
         logger.info(f"Modelo: {etiqueta_modelo} {prob_falsa:.2f}")
 
         # análisis imagen
@@ -77,7 +77,7 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
             
         prob_final = _ajustar_con_texto(prob_final, resultado_texto)
         confianza = _nivel_confianza(prob_final)
-        
+
         # Valoración final
         if etiqueta_modelo == "pendiente":
             val = (EtiquetaEnum.falsa if resultado_texto["punt_objetividad"] < 0.45 else EtiquetaEnum.verdadera)
@@ -87,7 +87,7 @@ def procesar_analisis_noticia(session: Session, noticia_id: int):
 
         # Explicación XAI con Ollama
         try:
-            explicacion = generar_explicacion(resultado_imagen or {}, resultado_texto, titulo=noticia.titulo)
+            explicacion = generar_explicacion(resultado_imagen or {}, resultado_texto, titulo=noticia.titulo, lang=lang, prob_falsa=prob_final)
             logger.info(f"Explicación generada: {explicacion[:1000]}")
         except Exception as e:
             logger.warning(f"XAI no disponible: {e}")

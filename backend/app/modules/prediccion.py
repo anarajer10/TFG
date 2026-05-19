@@ -53,12 +53,12 @@ def _cargar_modelo(lang: str) -> bool:
         return False
     
 # Predicción de noticias reales/falsas usando el modelo entrenado
-def predecir(titulo: str, descripcion: str) -> tuple[str, float]:
+def predecir(titulo: str, descripcion: str, lang: str | None = None) -> tuple[str, float]:
     texto = f"{titulo}. {descripcion}".strip()
     if not texto or len(texto) < 5:
         return "pendiente", 0.5
     
-    lang = _detectar_idioma(texto)
+    lang = lang if lang in _RUTAS else _detectar_idioma(texto)
 
     # Si falla el modelo del idioma detectado, se intenta con el español como fallback
     if not _cargar_modelo(lang):
