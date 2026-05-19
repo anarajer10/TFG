@@ -2,15 +2,17 @@ import { theme as G, fonts } from "../constants/theme";
 import { Card, Pill, Button, SectionTitle } from "../components/ui";
 import { MetricBar, ScoreDial } from "../components/shared";
 import { clamp, imagenMeta, sentimientoLabel, confianzaLabel, formatFecha } from "../utils/formatters";
+import { translation } from "../constants/translations";
 
-export default function ResultPage({ result, onBack }) {
+export default function ResultPage({ result, onBack, lang }) {
     const { valoracion, noticia, fuente_nombre } = result;
+    const t = translation[lang].result;
 
     const vMeta = (() => {
         const m = {
-            falsa: { label: "NOTICIA FALSA", color: G.danger, bg: G.dangerLo, icon: "✕" },
-            verdadera: { label: "NOTICIA VERDADERA", color: G.ok, bg: G.okLo, icon: "✓" },
-            pendiente: { label: "INDETERMINADO", color: G.warn, bg: G.warnLo, icon: "?" },
+            falsa: { label: t.falsa, color: G.danger, bg: G.dangerLo, icon: "✕" },
+            verdadera: { label: t.verdadera, color: G.ok, bg: G.okLo, icon: "✓" },
+            pendiente: { label: t.pendiente, color: G.warn, bg: G.warnLo, icon: "?" },
         };
         return m[valoracion.resultado] ?? m.pendiente;
     })();
@@ -56,7 +58,7 @@ export default function ResultPage({ result, onBack }) {
                     </div>
                     <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
                         <span style={{ fontSize: 11, color: conf.color, fontFamily: fonts.mono }}>
-                            Confianza {conf.label}
+                            {t.confianza} {conf.label}
                         </span>
                         <span style={{ fontSize: 11, color: G.muted }}>.</span>
                         <span style={{ fontSize: 11, color: G.muted }}>{formatFecha(valoracion.fecha_analisis)}</span>
@@ -64,11 +66,11 @@ export default function ResultPage({ result, onBack }) {
                 </div>
 
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontFamily: fonts.mono, fontSize: 40, fontWeight: 700, color: vMeta.color }}>
+                    <div style={{ fontFamily: fonts.mono, fontSize: 52, fontWeight: 700, color: vMeta.color }}>
                         {Math.round(valoracion.probabilidad * 100)}
                     </div>
                     <div style={{ color: G.textSub, fontSize: 11 }}>
-                        % probabilidad falsa
+                        {t.probFalsa}
                     </div>
                 </div>
             </div>
@@ -77,24 +79,24 @@ export default function ResultPage({ result, onBack }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
                 {/*Análisis de texto*/}
                 <Card>
-                    <SectionTitle>Análisis de texto</SectionTitle>
+                    <SectionTitle>{t.textoTitle}</SectionTitle>
 
                     <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 16 }}>
-                        <ScoreDial value={sentNorm} label="Sentimiento" />
-                        <ScoreDial value={objScore} label="Subjetividad" />
+                        <ScoreDial value={sentNorm} label={t.sentimiento} />
+                        <ScoreDial value={objScore} label={t.subjetividad} />
                     </div>
 
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {valoracion.punt_sentimiento !== null && (
                             <Pill color={G.accent}>
-                                {parseFloat(valoracion.punt_sentimiento) > 0.1 ? "Positivo"
-                                    : parseFloat(valoracion.punt_sentimiento) < -0.1 ? "Negativo"
-                                        : "Neutro"}
+                                {parseFloat(valoracion.punt_sentimiento) > 0.1 ? t.positivo
+                                    : parseFloat(valoracion.punt_sentimiento) < -0.1 ? t.negativo
+                                        : t.neutro}
                             </Pill>
                         )}
                         {valoracion.punt_objetividad !== null && (
                             <Pill color={parseFloat(valoracion.punt_objetividad) < 0.5 ? G.warn : G.ok}>
-                                Objetividad {Math.round(parseFloat(valoracion.punt_objetividad) * 100)}%
+                                {t.objetividad} {Math.round(parseFloat(valoracion.punt_objetividad) * 100)}%
                             </Pill>
                         )}
                     </div>
@@ -102,7 +104,7 @@ export default function ResultPage({ result, onBack }) {
 
                 {/*Análisis de imagen*/}
                 <Card>
-                    <SectionTitle>Análisis de imagen</SectionTitle>
+                    <SectionTitle>{t.imagenTitle}</SectionTitle>
 
                     <div style={{ marginBottom: 14 }}>
                         <Pill color={imgM.color}>{imgM.icon} {imgM.label}</Pill>
@@ -110,7 +112,7 @@ export default function ResultPage({ result, onBack }) {
 
                     {/*Barra de probabilidad falsa*/}
                     <MetricBar
-                        label="Riesgo general"
+                        label={t.riesgo}
                         value={valoracion.probabilidad}
                         color={vMeta.color}
                     />
@@ -121,7 +123,7 @@ export default function ResultPage({ result, onBack }) {
                             background: G.warnLo, borderRadius: 6,
                             fontSize: 12, color: G.warn,
                         }}>
-                            Imagen posiblemente fuera de contexto
+                            {t.fueraContexto}
                         </div>
                     )}
 
@@ -131,7 +133,7 @@ export default function ResultPage({ result, onBack }) {
                             background: G.warnLo, borderRadius: 6,
                             fontSize: 12, color: G.warn,
                         }}>
-                            Imagen clasificada como generada con IA
+                            {t.generadaIA}
                         </div>
                     )}
 
@@ -153,25 +155,54 @@ export default function ResultPage({ result, onBack }) {
             {valoracion.explicacion && (
                 <Card style={{ marginBottom: 16 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                        <SectionTitle>Explicación XAI</SectionTitle>
+                        <SectionTitle>{t.xaiTitle}</SectionTitle>
                         <Pill color={G.accent}>Llama 3.2</Pill>
                     </div>
-                    <p style={{ color: G.textSub, fontSize: 13, lineHeight: 1.75 }}>
-                        {valoracion.explicacion}
-                    </p>
+                    {(() => {
+                        const parts = valoracion.explicacion.split(/\*\*(.*?)\*\*/);
+                        const sections = [];
+                        for(let i = 1; i < parts.length; i += 2){
+                            const title = parts[i].trim();
+                            const body = (parts[i+1] || "").trim();
+                            if (title) sections.push({title, body});
+                        }
+                        return sections.length > 0 ? (
+                            <div>
+                                {sections.map(({title, body}, i) => (
+                                    <div key={i} style={{
+                                        padding: "12px 0", borderBottom: i < sections.length - 1 ? `1px solid ${G.border}` : "none",
+                                    }}>
+                                        <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 11,
+                                            color: G.accent, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6,
+                                        }}>
+                                            {title}
+                                        </div>
+                                        <p style={{ color: G.textSub, fontSize: 13, lineHeight: 1.65, margin: 0}}>
+                                            {body}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p style={{ color: G.textSub, fontSize: 13, lineHeight: 1.75, margin: 0}}>
+                                {valoracion.explicacion}
+                            </p>
+                        );
+                    })()}
+                    
                 </Card>
             )}
 
             {/*Metadatos de la noticia*/}
             <Card style={{ marginBottom: 24 }}>
-                <SectionTitle>Datos de la noticia</SectionTitle>
+                <SectionTitle>{t.datosTitle}</SectionTitle>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     {[
-                        { k: "Fuente", v: fuente_nombre || "-"},
-                        { k: "Categoría", v: noticia.categoria || "-" },
-                        { k: "URL", v: noticia.texto_url || "-" },
-                        { k: "Fecha publicación", v: formatFecha(noticia.fecha_publi) },
-                        { k: "id análisis", v: `#${valoracion.id}` },
+                        { k: t.fuente, v: fuente_nombre || "-" },
+                        { k: t.categoria, v: noticia.categoria || "-" },
+                        { k: t.url, v: noticia.texto_url || "-" },
+                        { k: t.fechaPubli, v: formatFecha(noticia.fecha_publi) },
+                        { k: t.idAnalisis, v: `#${valoracion.id}` },
                     ].map(({ k, v }) => (
                         <div key={k} style={{ padding: "8px 0", borderBottom: `1px solid ${G.border}`, minWidth: 0 }}>
                             <div style={{ color: G.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>{k}</div>
@@ -184,7 +215,7 @@ export default function ResultPage({ result, onBack }) {
                 </div>
             </Card>
 
-            <Button variant="ghost" onClick={onBack}>Nuevo análisis</Button>
+            <Button variant="ghost" onClick={onBack}>{t.newAnalisis}</Button>
         </div>
     );
 }

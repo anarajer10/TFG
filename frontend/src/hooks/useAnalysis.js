@@ -22,6 +22,7 @@ export function useAnalysis(){
             fuente_id:      null,
             etiqueta:       "pendiente",
             fuente_nombre:  formData.fuente_nombre?.trim() || null,
+            lang:           formData.lang || "es",
         };
 
         try{

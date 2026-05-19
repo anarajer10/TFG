@@ -2,8 +2,9 @@ import { useState } from "react";
 import { theme as G, fonts } from "../constants/theme";
 import { Input, Button, Spinner } from "../components/ui";
 import { extraerNoticia } from "../services/api";
+import { translation } from "../constants/translations";
 
-export default function AnalyzePage({ onAnalyze, loading, error }) {
+export default function AnalyzePage({ onAnalyze, loading, error, lang }) {
     const [form, setForm] = useState({
         texto_url: "",
         titulo: "",
@@ -13,6 +14,7 @@ export default function AnalyzePage({ onAnalyze, loading, error }) {
         fecha_publi: "",
         fuente_nombre: "",
     });
+    const t = translation[lang].analyze;
     const [errors, setErrors] = useState({});
     const [extraiendo, setExtraiendo] = useState(false);
     const [errorExtraccion, setErrorExtraccion] = useState(null);
@@ -23,21 +25,21 @@ export default function AnalyzePage({ onAnalyze, loading, error }) {
 
     function validate() {
         const e = {};
-        if (!form.titulo.trim()) e.titulo = "El título de la noticia es obligatorio";
-        else if (form.titulo.trim().length < 10) e.titulo = "El título debe tener al menos 10 caracteres";
+        if (!form.titulo.trim()) e.titulo = t.errorTitulo;
+        else if (form.titulo.trim().length < 10) e.titulo = t.errorTituloMin;
 
-        if (!form.descripcion.trim()) e.descripcion = "La descripción de la noticia es obligatoria";
-        else if (form.descripcion.trim().length < 50) e.descripcion = "La descripción debe tener al menos 50 caracteres";
+        if (!form.descripcion.trim()) e.descripcion = t.errorDescripcion;
+        else if (form.descripcion.trim().length < 50) e.descripcion = t.errorDescripcionMin;
 
         setErrors(e);
         return Object.keys(e).length === 0;
     }
 
-    async function handleExtraer(){
+    async function handleExtraer() {
         if (!form.texto_url.trim()) return;
         setExtraiendo(true);
         setErrorExtraccion(null);
-        try{
+        try {
             const datos = await extraerNoticia(form.texto_url);
             setForm(prev => ({
                 ...prev,
@@ -49,7 +51,7 @@ export default function AnalyzePage({ onAnalyze, loading, error }) {
             }));
         } catch (err) {
             console.error("Error en la extración de los datos", err)
-            setErrorExtraccion("No se ha podido extraer automáticamente, necesita rellenar los campos manualmente.");
+            setErrorExtraccion(t.extractError);
         } finally {
             setExtraiendo(false);
         }
@@ -61,29 +63,52 @@ export default function AnalyzePage({ onAnalyze, loading, error }) {
     }
 
     return (
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px", position: "relative" }}>
+            {loading && (
+                <div style={{
+                    position: "fixed", bottom: 32, right: 32, background: G.surface, border: `1px solid ${G.accent}66`,
+                    borderRadius: 14, padding: "18px 24px", display: "flex", alignItems: "center", gap: 14,
+                    boxShadow: "0 9px 32px rgba(238, 154, 255, 0.4)", zIndex: 100, minWidth: 220,
+                }}>
+                    <Spinner size={22} />
+                    <div>
+                        <p style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 14, color: G.text }}>
+                            {t.analyzing}
+                        </p>
+                        <p style={{ color: G.textSub, fontSize: 12 }}>
+                            {t.analyzingSubtitle}
+                        </p>
+                    </div>
+                </div>
+            )}
+            <div style={{ position: "fixed", left: "calc(50% - 430px)", top: "15%", width: 2, height: "60vh", background: `linear-gradient(to bottom, transparent, ${G.accent}44, transparent)`, pointerEvents: "none" }} />
+            <div style={{ position: "fixed", right: "calc(50% - 430px)", top: "15%", width: 2, height: "60vh", background: `linear-gradient(to bottom, transparent, ${G.accent}44, transparent)`, pointerEvents: "none" }} />
             {/*Cabecera*/}
             <div style={{ marginBottom: 32 }}>
                 <h1 style={{
                     fontFamily: fonts.display, fontSize: 28, fontWeight: 800,
                     letterSpacing: "-0.03em", marginBottom: 6,
                 }}>
-                    Analizar noticia
+                    {t.title}
                 </h1>
                 <p style={{ color: G.textSub, fontSize: 14 }}>
-                    Pega la URL de la noticia para extraer los datos automáticamente, o introdúcelos manualmente
+                    {t.subtitle}
                 </p>
             </div>
 
             {/*Formulario*/}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
+                <div style={{ fontSize: 12, fontFamily: fonts.mono, color: G.accent, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                    {lang === "en" ? "Source" : "Fuente"}
+                </div>
+
                 {/*URL con el botón de extracción*/}
                 <div>
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                         <div style={{ flex: 1 }}>
                             <Input
-                                label="URL de la noticia"
+                                label={t.urlLabel}
                                 placeholder="https://..."
                                 value={form.texto_url}
                                 onChange={set("texto_url")}
@@ -92,23 +117,27 @@ export default function AnalyzePage({ onAnalyze, loading, error }) {
                         <Button
                             onClick={handleExtraer}
                             disabled={extraiendo || !form.texto_url.trim()}
-                            style={{ whiteSpace: "nowrap", padding: "10px 16px"}}>
-                            {extraiendo ? <><Spinner size={14}/> Extrayendo información de la noticia</>: "Extraer datos"}
+                            style={{ whiteSpace: "nowrap", padding: "10px 16px" }}>
+                            {extraiendo ? <><Spinner size={14} /> {t.extracting}</> : t.extractBoton}
                         </Button>
                     </div>
                     {errorExtraccion && (
-                        <p style={{ color: G.warn, fontSize: 12, marginTop: 4}}>
+                        <p style={{ color: G.warn, fontSize: 12, marginTop: 4 }}>
                             {errorExtraccion}
                         </p>
                     )}
                 </div>
 
+                <div style={{ fontSize: 12, fontFamily: fonts.mono, color: G.accent, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                    {lang === "en" ? "Content" : "Contenido"}
+                </div>
+
                 {/*Título*/}
                 <div>
                     <Input
-                        label="Título"
+                        label={t.tituloLabel}
                         required
-                        placeholder="Titular de la noticia"
+                        placeholder={t.tituloPlaceholder}
                         value={form.titulo}
                         onChange={set("titulo")}
                     />
@@ -118,42 +147,54 @@ export default function AnalyzePage({ onAnalyze, loading, error }) {
                 {/*Descripción*/}
                 <div>
                     <Input
-                        label="Cuerpo / descripción"
+                        label={t.descripcionLabel}
                         required
                         multiline
-                        placeholder="Descripción de la noticia"
+                        placeholder={t.descripcionPlaceholder}
                         value={form.descripcion}
                         onChange={set("descripcion")}
                     />
                     {errors.descripcion && <p style={{ color: G.danger, fontSize: 12, marginTop: 4 }}>{errors.descripcion}</p>}
                 </div>
 
+                <div style={{ fontSize: 12, fontFamily: fonts.mono, color: G.accent, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                    {lang === "en" ? "Metadata" : "Metadatos"}
+                </div>
+
                 {/*URL imagen y la fuente*/}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                        <Input
+                            label={t.imagenLabel}
+                            placeholder="https://..."
+                            value={form.imagen_url}
+                            onChange={set("imagen_url")}
+                        />
+                        {form.imagen_url && (
+                            <img src={form.imagen_url} alt=""
+                                style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, border: `1px solid ${G.border}`, marginTop: 8 }}
+                                onError={e => { e.target.style.display = "none"; }} />
+                        )}
+                    </div>
                     <Input
-                        label="URL de la imagen"
-                        placeholder="https://..."
-                        value={form.imagen_url}
-                        onChange={set("imagen_url")}
-                    />
-                    <Input
-                        label="Fuente"
+                        label={t.fuenteLabel}
                         placeholder="RTVE, Snopes, ..."
                         value={form.fuente_nombre}
                         onChange={set("fuente_nombre")}
                     />
+
                 </div>
 
                 {/* Categoría y fecha*/}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <Input
-                        label="Categoría"
-                        placeholder="Noticias o Fact-checker"
+                        label={t.categoriaLabel}
+                        placeholder={t.categoriaPlaceholder}
                         value={form.categoria}
                         onChange={set("categoria")}
                     />
                     <Input
-                        label="Fecha de publicación"
+                        label={t.fechaLabel}
                         type="datetime-local"
                         value={form.fecha_publi}
                         onChange={set("fecha_publi")}
@@ -165,7 +206,7 @@ export default function AnalyzePage({ onAnalyze, loading, error }) {
                     onClick={handleSubmit}
                     disabled={loading}
                     style={{ width: "100%", padding: "13px", fontSize: 15, marginTop: 8 }}>
-                    {loading ? <><Spinner size={18} /> Analizando...</> : "Analizar noticia"}
+                    {loading ? <><Spinner size={18} /> {t.analyzing}</> : t.analyzeBoton}
                 </Button>
             </div>
         </div>

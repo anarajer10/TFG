@@ -49,3 +49,15 @@ export async function getNoticias({offset=0, limit=100} = {}){
 export async function getNoticia(id){
     return request(`/noticias/${id}`);
 }
+
+// GET /noticias/recientes
+export async function getRecientes(limit=20, lang=null){
+    const params = new URLSearchParams({limit});
+    if (lang) params.append("lang", lang);
+    return request(`/noticias/recientes?${params}`);
+}
+
+// GET /metricas
+export async function getMetricas(){
+    return request("/metricas");
+}

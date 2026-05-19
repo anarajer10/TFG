@@ -75,7 +75,7 @@ export function Input({label, value, onChange, placeholder, type = "text", multi
         padding: "10px 14px",
         color: G.text,
         fontFamily: fonts.body,
-        fontSize: 14,
+        fontSize: 15,
         outline: "none",
         transition: "border-color 0.15s",
         resize: multiline ? "vertical": undefined,
@@ -88,9 +88,9 @@ export function Input({label, value, onChange, placeholder, type = "text", multi
                 <label style={{
                     display: "block",
                     color: G.textSub,
-                    fontSize: 11,
+                    fontSize: 14,
                     marginBottom: 6,
-                    letterSpacing: "0.06em",
+                    letterSpacing: "0.02em",
                     textTransform: "uppercase",
                 }}>
                     {label}{required && <span style={{color: G.danger}}> *</span>}

@@ -1,8 +1,10 @@
 import { fonts, theme as G } from "../../constants/theme";
 import { clamp, confianzaLabel, scoreColor } from "../../utils/formatters";
+import { translation } from "../../constants/translations";
+import HootLogo from '../../assets/hoot_logo.svg?react'
 
 // Navbar
-export function Navbar({ page, setPage }){
+export function Navbar({ page, setPage, lang, setLang }){
     return(
         <nav style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -11,22 +13,23 @@ export function Navbar({ page, setPage }){
             borderBottom: `1px solid ${G.border}`,
             position: "sticky", top: 0, zIndex: 100,
         }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                    width: 28, height: 28, borderRadius: 6,
-                    background: G.accent,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: fonts.display, fontWeight: 800, fontSize: 13, color: "#fff",
-                }}>Detector de fake news</div>
-                <span style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 15, letterSpacing: "-0.02em" }}>
-                    Fake news detector
+            <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+                onClick={() => setPage("home")}>
+                <HootLogo width={34} height={34} />
+                <span style={{
+                    fontFamily: fonts.display, fontWeight: 800, fontSize: 18,
+                    letterSpacing: "-0.02em", color: G.text,
+                }}>
+                    HOOT
                 </span>
             </div>
 
-            <div style={{ display: "flex", gap: 4 }}>
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 {[
-                    { id: "analyze", label: "Analizar" },
-                    { id: "dashboard", label: "Dashboard" },
+                    { id: "home", label: translation[lang].nav.home },
+                    { id: "analyze", label: translation[lang].nav.analyze },
+                    { id: "dashboard", label: translation[lang].nav.dashboard },
+                    { id: "recientes", label: translation[lang].nav.recientes },
                 ].map(({ id, label }) => (
                     <button key={id} onClick={() => setPage(id)} style={{
                         padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer",
@@ -36,6 +39,18 @@ export function Navbar({ page, setPage }){
                         transition: "all 0.15s",
                     }}>
                         {label}
+                    </button>
+                ))}
+                <div style={{ width: 1, height: 20, background: G.border, margin: "0 8px" }} />
+                {["es", "en"].map(l => (
+                    <button key={l} onClick={() => setLang(l)} style={{
+                        padding: "4px 10px", borderRadius: 6, border: `1px solid ${lang === l ? G.accent: G.border}`,
+                        cursor: "pointer", fontFamily: fonts.mono, fontSize: 12, fontWeight: 600,
+                        background: lang === l ? G.accentLo: "transparent",
+                        color: lang === l ? G.accent: G.textSub,
+                        transition: "all 0.15s"
+                    }}>
+                        {l.toUpperCase()}
                     </button>
                 ))}
             </div>
@@ -95,4 +110,3 @@ export function ScoreDial({ value, label }){
         </div>
     );
 }
-

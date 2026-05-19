@@ -1,27 +1,27 @@
 export const theme = {
-    bg:         "#0d0f14",
-    surface:    "#13161e",
-    card:       "#181c27",
-    border:     "#252a38",
-    accent:     "#4f8ef7",
-    accentLo:   "#1a2d25",
-    danger:     "#e05252",
-    dangerLo:   "#3a1616",
-    warn:       "#e0943a",
-    warnLo:     "#3a2710",
-    ok:         "#3acea0",
-    okLo:       "#0e3328",
-    muted:      "#6b7280",
-    text:       "#e8eaf0",
-    textSub:    "#9aa3b2",
+    bg:         "#0D0B1A",
+    surface:    "#13112A",
+    card:       "#1A1836",
+    border:     "#2A2750",
+    accent:     "#534AB7",
+    accentLo:   "#1E1A45",
+    danger:     "#E24B4A",
+    dangerLo:   "#2A0F0F",
+    warn:       "#BA7517",
+    warnLo:     "#2A1A05",
+    ok:         "#1D9E75",
+    okLo:       "#072B1E",
+    muted:      "#5A5780",
+    text:       "#EDEAF8",
+    textSub:    "#9B97C0",
 };
 
 export const fonts = {
-    display:    "'Syne', sans-serif",
+    display:    "'Space Grotesk', sans-serif",
     body:       "'Inter', sans-serif",
     mono:       "'DM Mono', monospace",
 };
 
 // Así se extraen las fuentes de Google
 export const googleFonts = 
-"https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500&display=swap";
+"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap";
