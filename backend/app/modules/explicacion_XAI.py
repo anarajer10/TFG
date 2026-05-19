@@ -35,12 +35,12 @@ def _interpretar_ia(es_ia: bool, confianza: float) -> str:
 def _interpretar_coherencia(score: float) -> str:
     if score == -1.0:
         return "No se ha podido analizar la coherencia entre la imagen y el título de la noticia"
-    elif score == 1.0:
-        return "La imagen aparece entre los resultados de búsqueda para el título"
-    elif score == 0.75:
-        return "El dominio de la imagen está en los resultados de búsqueda para el título"
+    elif score >= 0.55:
+        return f"La imagen es coherente con el título de la noticia (similitud semántica: {score})"
+    elif score >= 0.35:
+        return f"La imagen es parcialmente coherente con el título (similitud semántica: {score})"
     else:
-        return "Ni la imagen ni su dominio se encuentran entre los resultados de búsqueda para el título"
+        return f"La imagen no parece estar relacionada con el contenido del título (similitud semántica: {score})"
     
 def _interpretar_exif(fuera_contexto: bool, metadatos: dict) -> str:
     if not metadatos:
@@ -57,8 +57,11 @@ def _interpretar_sentimiento(sentimiento: str, punt: float) -> str:
         "NEG": "negativo",
         "NEU": "neutro"
     }
-
     sent_texto = mapa.get(sentimiento, sentimiento)
+
+    if sentimiento == "NEG":
+        return f"El análisis de sentimientos es {sent_texto} (puntuación: {round(punt, 2)}). El tono negativo es habitual en noticias sobre eventos adversos y no implica por sí solo desinformación"
+        
     return f"El análisis de sentimientos del texto es {sent_texto} (puntuación: {round(punt, 2)})"
 
 def _interpretar_objetividad(punt: float) -> str:
@@ -76,6 +79,8 @@ def _interpretar_emocion(emocion: str) -> str:
         return "No se ha detectado una emoción destacable en el texto"
     if emocion.lower() in emociones:
         return f"Se detecta una emoción, concretamente '{emocion}', indicando un tono poco objetivo"
+    if emocion.lower() in {"others", "other", "neutral"}:
+        return f"La emoción predominante es neutra o mixta, sin indicar alarmismo"
     
     return f"Se ha detectado una emoción en el texto, '{emocion}'"
 
@@ -94,13 +99,12 @@ def _interpretar_estatus_imagen(estatus) -> str:
     }
     return mapa.get(nombre, f"Clasificación de la imagen: {nombre}")
 
-
 # Construcción del prompt
-def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str) -> str:
+def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str, lang: str = "es", prob_falsa: float = 0.5) -> str:
     # Imagen
     ela = _interpretar_ela(resultado_imagen.get("ela_score", -1.0))
     ia = _interpretar_ia(resultado_imagen.get("es_ia", False), resultado_imagen.get("confianza_ia", -1.0))
-    coherencia = _interpretar_coherencia(resultado_imagen.get("coherencia_score", -1.0))
+    coherencia = _interpretar_coherencia(resultado_imagen.get("clip_score", -1.0))
     exif = _interpretar_exif(resultado_imagen.get("fuera_contexto", False), resultado_imagen.get("metadatos", {}))
     estatus_img = _interpretar_estatus_imagen(resultado_imagen.get("estatus", "autentica"))
 
@@ -110,42 +114,80 @@ def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str
     emocion = _interpretar_emocion(resultado_texto.get("emocion", "-"))
     indicadores = _interpretar_indicadores(resultado_texto.get("indicadores", []))
 
-    prompt = f"""Eres un sistema experto en detección de desinformación y fake news.
-    Tu tarea es generar una explicación clara, detallada y en español sobre el análisis realizado a la siguiente noticia.
+    if lang == "en":
+        prompt = f"""You are an expert system in disinformation and fake news detection.
+        Your task is to generate a clear, detailed explanation in English about the analysis performed on the following news article.
 
-    Título de la noticia: "{titulo}"
+        News title: "{titulo}"
+        Model fake probability: {round(prob_falsa*100, 1)}%
 
-    Análisis de la imagen: 
-    {ela}
-    {ia}
-    {coherencia}
-    {exif}
-    Clasificación final de la imagen: {estatus_img}
+        Image analysis: 
+        {ela}
+        {ia}
+        {coherencia}
+        {exif}
+        Final image classification: {estatus_img}
 
-    Análisis del texto:
-    {sentimiento}
-    {objetividad}
-    {emocion}
-    {indicadores}
+        Text analysis:
+        {sentimiento}
+        {objetividad}
+        {emocion}
+        {indicadores}
 
-    Instrucciones:
-    Genera una explicación XAI (Inteligencia Artificial Explicable) completa en español que haga las siguientes cosas:
-    1. Resuma en una frase el veredicto general de la noticia.
-    2. Explique de forma detallada qué indica cada métrica del análisis de imagen y por qué es relevante para detectar desinformación.
-    3. Explique de forma detallada qué indica cada métrica del análisis de texto y cómo contribuye al veredicto final.
-    4. Justifique la clasificación final de forma coherente con todos los datos anteriores.
-    5. Indique el nivel de confianza general de análisis (alto, medio o bajo) y por qué.
+        IMPORTANT: Your entire response MUST be in English. All section headers MUST be written in English.
 
-    Sé claro, preciso y accesible para un usuario no técnico. No uses listas con viñetas, redacta en párrafos.
-    No inventes datos adicionales ni desvaríes, si una métrica indica que no se ha podido analizar o tiene un valor negativo,
-    menciónalo como una limitación del análisis realizado.
-    """
+        Instructions:
+        Generate a complete XAI (Explainable Artificial Intelligence) explanation in English that does the following things:
+        1. **General verdict** : Summarise in one sentence the general verdict on the news article.
+        2. **Image analysis** : Explain in detail what each image analysis metric indicates and why it is relevant for detecting disinformation.
+        3. **Text analysis** : Explain in detail what each text analysis metric indicates and how it contributes to the final verdict.
+        4. **Final classification** : Evaluate whether the model's fake probability seems coherent with the analysed indicators and explain clearly, 
+            and justify the final classification coherently with all the above data.
+        5. **Confidence level** : State the general confidence level for analysis (high, medium or low) and why.
+
+        Be clear and accessible for a non-technical user. Write each section as a paragraph, not bullet points
+        Do not invent additional data nor ramble, if a metric indicates it could not be analysed or has a negative value,
+        mention it as limitation of the analysis performed.
+        """
+    else:
+        prompt = f"""Eres un sistema experto en detección de desinformación y fake news.
+        Tu tarea es generar una explicación clara, detallada y en español sobre el análisis realizado a la siguiente noticia.
+
+        Título de la noticia: "{titulo}"
+        Probabilidad del modelo para asignarla como falsa: {round(prob_falsa*100, 1)}%
+
+        Análisis de la imagen: 
+        {ela}
+        {ia}
+        {coherencia}
+        {exif}
+        Clasificación final de la imagen: {estatus_img}
+
+        Análisis del texto:
+        {sentimiento}
+        {objetividad}
+        {emocion}
+        {indicadores}
+
+        Instrucciones:
+        Genera una explicación XAI (Inteligencia Artificial Explicable) completa en español que haga las siguientes cosas:
+        1. Resuma en una frase el veredicto general de la noticia.
+        2. Explique de forma detallada qué indica cada métrica del análisis de imagen y por qué es relevante para detectar desinformación.
+        3. Explique de forma detallada qué indica cada métrica del análisis de texto y cómo contribuye al veredicto final.
+        4.  Evalúa si la probabilidad del modelo es coherente con los indicadores analizados y explícalo con claridad y justifique 
+            la clasificación final de forma coherente con todos los datos anteriores.
+        5. Indique el nivel de confianza general de análisis (alto, medio o bajo) y por qué.
+
+        Sé claro, preciso y accesible para un usuario no técnico. No uses listas con viñetas, redacta en párrafos.
+        No inventes datos adicionales ni desvaríes, si una métrica indica que no se ha podido analizar o tiene un valor negativo,
+        menciónalo como una limitación del análisis realizado.
+        """
 
     return prompt
 
 # Llamada a Ollama para generar la explicación XAI en lenguaje natural
-def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: str = "") -> str:
-    prompt = _construir_prompt(resultado_imagen, resultado_texto, titulo)
+def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: str = "", lang: str = "es", prob_falsa = 0.5) -> str:
+    prompt = _construir_prompt(resultado_imagen, resultado_texto, titulo, lang, prob_falsa)
 
     try:
         response = requests.post(
