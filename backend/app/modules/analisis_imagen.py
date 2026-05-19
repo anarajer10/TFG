@@ -10,7 +10,9 @@ from PIL import Image, ImageChops, ImageEnhance
 from dotenv import load_dotenv
 from app.models.schema import ImagenEnum
 from PIL.ExifTags import TAGS
-from sentence_transformers import SentenceTransformer, util  # type: ignore
+from transformers import CLIPProcessor, CLIPModel as CLIPHFModel  # type: ignore
+from sentence_transformers import SentenceTransformer  # type: ignore
+import torch # type: ignore
 
 load_dotenv()
 
@@ -26,12 +28,16 @@ DIAS_CONTEXTO = 180     # Días de diferencia máxima entre fecha de los metadat
 CLIP_THRESHOLD = 0.35   # Por debajo de este valor, la imagen no es coherente con el título
 
 _clip_model = None
+_clip_processor = None
+_clip_text_model = None
 
-def _cargar_clip() -> SentenceTransformer:
-    global _clip_model
+def _cargar_clip():
+    global _clip_model, _clip_processor, _clip_text_model
     if _clip_model is None:
-        _clip_model = SentenceTransformer("clip-ViT-B-32-multilingual-v1")
-    return _clip_model
+        _clip_model = CLIPHFModel.from_pretrained("openai/clip-vit-base-patch32")
+        _clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        _clip_text_model = SentenceTransformer("clip-ViT-B-32-multilingual-v1")
+    return _clip_model, _clip_processor, _clip_text_model
 
 # Con la url, descraga la imagen y devuelve sus bytes
 def descargar_imagen(url: str) -> bytes | None:
@@ -198,11 +204,18 @@ def _imagen_pequena(metadatos: dict) -> bool:
 # Similitud semántica imagen-título usando CLIP multilingüe
 def calcular_similitud_clip(imagen_bytes: bytes, titulo: str) -> float:
     try: 
-        model = _cargar_clip()
+        image_model, image_processor, text_model = _cargar_clip()
         imagen = Image.open(io.BytesIO(imagen_bytes)).convert("RGB")
-        imagen_emb = model.encode(np.array(imagen), convert_to_tensor=True)
-        texto_emb = model.encode(titulo[:100], convert_to_tensor=True)
-        similitud = float(util.cos_sim(imagen_emb, texto_emb)[0][0])
+
+        inputs = image_processor(images=[imagen], return_tensors="pt")
+        with torch.no_grad():
+            image_features = image_model.get_image_features(pixel_values=inputs["pixel_values"])
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+
+        text_features = text_model.encode([titulo[:100]], convert_to_tensor=True)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        
+        similitud = float((image_features*text_features).sum())
         return round((similitud+1)/2, 4) # para normalizar de [-1,1] a [0,1]
     except Exception as e:
         logger.error(f"Error en CLIP: {e}")
