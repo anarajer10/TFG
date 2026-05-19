@@ -120,7 +120,7 @@ class APNewsScraper(ScraperBase):
                 "categoria": "Noticias",
                 "nombre_fuente": "APNews.com",
                 "url_fuente": "https://apnews.com/article/",
-                "idioma_fuente": "Inglés",
+                "idioma_fuente": "en",
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,

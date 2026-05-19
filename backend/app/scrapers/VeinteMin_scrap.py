@@ -104,7 +104,7 @@ class VeinteMinScraper(ScraperBase):
                 "categoria": "Noticias",
                 "nombre_fuente": "20minutos.es",
                 "url_fuente": "https://www.20minutos.es/",
-                "idioma_fuente": "Español",
+                "idioma_fuente": "es",
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,

@@ -108,7 +108,7 @@ class RTVEScraper(ScraperBase):
                 "categoria": "Noticias",
                 "nombre_fuente": "RTVE.es",
                 "url_fuente": "https://www.rtve.es/noticias/",
-                "idioma_fuente": "Español",
+                "idioma_fuente": "es",
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,

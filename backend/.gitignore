@@ -25,6 +25,7 @@ dataset_en.csv
 dataset_completo.csv
 dataset_fakenews/
 dataset_liar/
+dataset_fakenewsnet/
 
 # Métricas y comparaciones de los algoritmos
 metricas.json

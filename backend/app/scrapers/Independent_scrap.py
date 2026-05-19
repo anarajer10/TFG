@@ -105,7 +105,7 @@ class IndependentScraper(ScraperBase):
                 "categoria": "Noticias",
                 "nombre_fuente": "independent.co.uk",
                 "url_fuente": "https://www.independent.co.uk/",
-                "idioma_fuente": "Inglés",
+                "idioma_fuente": "en",
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,

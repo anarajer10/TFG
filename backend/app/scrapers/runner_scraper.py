@@ -7,6 +7,9 @@ from .APNews_scrap import APNewsScraper
 from .Snopes_scrap import SnopesScraper
 from .VeinteMin_scrap import VeinteMinScraper
 from .Independent_scrap import IndependentScraper
+import sqlalchemy as sa
+from app.services.analisis_modulos import procesar_analisis_noticia
+from app.models.schema import Valoracion, Fuente
 
 def _get_or_create_fuente(session: Session, nombre: str, url: str, idioma: str) -> Fuente:
     fuente = session.exec(select(Fuente).where(Fuente.url == url)).first()
@@ -257,6 +260,31 @@ def run_scraper_Snopes(limit: int = 100):
 
         print(f"{len(articles)} noticias guardadas correctamente.")
         print(f"Articulos nuevos guardados: {count}") 
+
+# Analiza las últimas noticias almacenadas (con estado Pendiente)
+def analizar_noticias_pendientes(limit: int = 100):
+    with Session(engine) as session: 
+        analyzed_ids = session.exec(select(Valoracion.noticia_id)).all()
+
+        if analyzed_ids:
+            stmt = select(Noticia).where(
+                sa.not_(Noticia.id.in_(analyzed_ids))
+            ).limit(limit)
+        else:
+            stmt = select(Noticia).limit(limit)
+
+        pendientes = session.exec(stmt).all()
+        print(f"Noticias pendientes de análisis: {len(pendientes)}")
+
+        for noticia in pendientes:
+            fuente = session.get(Fuente, noticia.fuente_id) if noticia.fuente_id else None
+            lang = fuente.idioma if fuente and fuente.idioma in ("es", "en") else "es"
+            try:
+                procesar_analisis_noticia(session, noticia.id, lang=lang)
+                print(f"Analizada la noticia {noticia.titulo[:60]}")
+            except Exception as e:
+                print(f"Error en la noticia {noticia.id}: {e}")
+                continue
 
 
 if __name__ == "__main__":

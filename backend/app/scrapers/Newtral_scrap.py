@@ -112,7 +112,7 @@ class NewtralScraper(ScraperBase):
                 "categoria": "Fact-Check",
                 "nombre_fuente": "Newtral.es",
                 "url_fuente": "https://www.newtral.es/",
-                "idioma_fuente": "Español",
+                "idioma_fuente": "es",
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,

@@ -111,7 +111,7 @@ class SnopesScraper(ScraperBase):
                 "categoria": "Fact-Check",
                 "nombre_fuente": "Snopes.com",
                 "url_fuente": "https://www.snopes.com/",
-                "idioma_fuente": "Inglés",
+                "idioma_fuente": "en",
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,
