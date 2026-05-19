@@ -185,5 +185,5 @@ if __name__ == "__main__":
     print("Dataset inglés")
     entrenar("dataset_en.csv", "en")
 
-    print("Dataset completo")
-    entrenar("dataset_completo.csv", "completo")
+    # print("Dataset completo")
+    # entrenar("dataset_completo.csv", "completo")

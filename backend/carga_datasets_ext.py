@@ -7,7 +7,7 @@ from io import BytesIO
 from langdetect import detect # type: ignore
 
 DATASET_CSV = "dataset.csv" # Datos de la BD (scrapers)
-DATASET_FUSIONADO = "dataset_completo.csv" # En español e inglés mezclados
+# DATASET_FUSIONADO = "dataset_completo.csv" # En español e inglés mezclados
 DATASET_ES = "dataset_es.csv" # en español solo
 DATASET_EN = "dataset_en.csv" # en inglés solo
 
@@ -24,6 +24,7 @@ FAKEDES_URLS = {
 
 CARPETA_LIAR = "dataset_liar"
 CARPETA_FAKENEWS = "dataset_fakenews"
+CARPETA_FAKENEWSNET = "dataset_fakenewsnet"
 
 # Para saber si las notcias de la BD son en español o no
 def _es_espanol(texto: str) -> bool:
@@ -92,6 +93,33 @@ def cargar_fakenews() -> pd.DataFrame:
           f"({(df['label'] == 1).sum()} falsas, {(df['label'] == 0).sum()} verdaderas)")
     return df
 
+def cargar_buzzfeed() -> pd.DataFrame:
+    filas = []
+    for archivo, label in [("BuzzFeed_fake_news_content.csv", 1), ("BuzzFeed_real_news_content.csv", 0)]:
+        ruta = os.path.join(CARPETA_FAKENEWSNET, archivo)
+        if not os.path.exists(ruta):
+            print(f"{ruta} no encontrada")
+            continue
+        df = pd.read_csv(ruta)
+        for _, fila in df.iterrows():
+            titulo = str(fila.get("title", "") or "").strip()
+            texto_art = str(fila.get("text", "") or "").strip()
+            texto = f"{titulo}. {texto_art}".strip() if texto_art else titulo
+            if len(texto) > 10:
+                filas.append({"texto": texto, "label": label})
+    
+    df = pd.DataFrame(filas)
+    print(f"{len(df)} muestras en BuzzFeed ({(df['label'] == 1).sum()} falsas, {(df['label'] == 0).sum()} verdaderas)")
+    return df
+
+def cargar_politifact() -> pd.DataFrame:
+    ruta = os.path.join(CARPETA_FAKENEWSNET, "politifact_content.csv")
+    if not os.path.exists(ruta):
+        print(f"{ruta} no encontrada, hay que ejecutar antes descarga_fakenewsnet.py")
+        return pd.DataFrame()
+    df = pd.read_csv(ruta)
+    print(f"{len(df)} muestras en Politifact, ({(df['label'] == 1).sum()} falsas y {(df['label'] == 0).sum()} verdaderas)")
+    return df
 
 def cargar_fakedes() -> pd.DataFrame:
     filas = []
@@ -139,9 +167,9 @@ def _resumen(nombre: str, df: pd.DataFrame):
 
 
 def fusionar():
-    df_liar = cargar_liar()
+    # df_liar = cargar_liar()
     df_fakedes = cargar_fakedes()
-    df_fakenews_en = cargar_fakenews()
+    # df_fakenews_en = cargar_fakenews()
 
     df_propio = pd.DataFrame()
     if os.path.exists(DATASET_CSV):
@@ -160,23 +188,33 @@ def fusionar():
     _resumen("Dataset en espalol (dataset_es.csv)", df_es)
     df_es.to_csv(DATASET_ES, index=False, encoding="utf-8")
 
-    # Dataset solo en inglés con LIAR y datos de los scrapers
-    dfs_en = [df_fakenews_en] # Cambiar LIAR por Fake news
+    # Dataset solo en inglés con PolitiFact y BuzzFeed y datos de los scrapers
+    df_politifact = cargar_politifact() 
+    df_buzzfeed = cargar_buzzfeed()
+
+    df_en_raw = pd.concat([df_politifact, df_buzzfeed], ignore_index=True).drop_duplicates(subset="texto")
+    n_por_clase = int((df_en_raw['label'] == 1).sum()) # para limitar al mínimo, que es la clase Fake
+    df_en_bal = pd.concat([
+        df_en_raw[df_en_raw['label'] == 0].sample(n_por_clase, random_state=42),
+        df_en_raw[df_en_raw['label'] == 1],
+    ], ignore_index=True).sample(frac=1, random_state=42)
+
+    dfs_en = [df_en_bal]
     if not df_propio.empty:
         df_propio_en = df_propio[~df_propio["texto"].apply(_es_espanol)]
         print(f"{len(df_propio_en)} muestras en el dataset de la BD filtrando por aquellas en inglés")
         dfs_en.append(df_propio_en)
-    df_en = pd.concat(dfs_en, ignore_index=True).drop_duplicates(subset="texto")
+    df_en = pd.concat(dfs_en, ignore_index=True).drop_duplicates(subset="texto").sample(frac=1, random_state=42)
     _resumen("Dataset en inglés (dataset_en.csv)", df_en)
     df_en.to_csv(DATASET_EN, index=False, encoding="utf-8")
 
     # Dataset con LIAR, FakeDeS y datos de los scrapers
-    dfs_final = [df_fakenews_en, df_fakedes]
-    if not df_propio.empty:
-        dfs_final.append(df_propio)
-    df_completo = pd.concat(dfs_final, ignore_index=True).drop_duplicates(subset="texto")
-    _resumen("Dataset mixto (dataset_completo.csv)", df_completo)
-    df_completo.to_csv(DATASET_FUSIONADO, index=False, encoding="utf-8")
+    # dfs_final = [df_fakenews_en, df_fakedes]
+    # if not df_propio.empty:
+    #    dfs_final.append(df_propio)
+    # df_completo = pd.concat(dfs_final, ignore_index=True).drop_duplicates(subset="texto")
+    # _resumen("Dataset mixto (dataset_completo.csv)", df_completo)
+    # df_completo.to_csv(DATASET_FUSIONADO, index=False, encoding="utf-8")
     
 
 if __name__ == "__main__":
