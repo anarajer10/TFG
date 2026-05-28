@@ -1,7 +1,13 @@
 import { theme as G, fonts } from "../constants/theme";
 import { Button } from "../components/ui";
 import HootLogo from "../assets/hoot_logo.svg?react";
-import { translation } from "../constants/translations";
+import ComicHootProp1 from "../assets/comicHootProp1.svg?react";
+import ComicHootProp2 from "../assets/comicHootProp2.svg?react";
+import ComicHootProp3 from "../assets/comicHootProp3.svg?react";
+import ComicHoot2Paso1 from "../assets/comicHoot2Paso1.svg?react";
+import ComicHoot2Paso2 from "../assets/comicHoot2Paso2.svg?react";
+import ComicHoot2Paso3 from "../assets/comicHoot2Paso3.svg?react";
+import { translation } from "../constants/i18n";
 
 export default function HomePage({ setPage, lang }) {
     const t = translation[lang].home;
@@ -39,10 +45,37 @@ export default function HomePage({ setPage, lang }) {
                         style={{ padding: "12px 28px", fontSize: 15 }}>
                         {t.cta}
                     </Button>
-                    <Button variant="ghost" onClick={() => setPage("dashboard")}
+                    <Button variant="primary" onClick={() => setPage("dashboard")}
                         style={{ padding: "12px 28px", fontSize: 15 }}>
                         {t.ctaSecondary}
                     </Button>
+                </div>
+            </section>
+
+            {/*Propósito*/}
+            <section style={{ padding: "60px 24px", maxWidth: 900, margin: "0 auto" }}>
+                <h2 style={{
+                    fontFamily: fonts.display, fontWeight: 800, fontSize: 28, letterSpacing: "-0.03em",
+                    color: G.text, marginBottom: 40, textAlign: "center",
+                }}>
+                    {t.propTitle}
+                </h2>
+                <div style= {{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+                    {[
+                        { Dibujo: ComicHootProp1, desc: t.prop1Desc },
+                        { Dibujo: ComicHootProp2, desc: t.prop2Desc },
+                        { Dibujo: ComicHootProp3, desc: t.prop3Desc },
+                    ].map(({Dibujo, desc}, i) => (
+                        <div key={i} style={{ textAlign: "center" }}>
+                            <Dibujo style={{ width: "100%", height: "auto", maxHeight: 220 }}/>
+                            <div style={{
+                                fontFamily: fonts.display, fontWeight: 700,
+                                color: G.text, marginBottom: 12, fontSize: 15,
+                            }}>
+                                {desc}
+                            </div>
+                        </div>    
+                    ))}
                 </div>
             </section>
 
@@ -50,9 +83,9 @@ export default function HomePage({ setPage, lang }) {
             <section style={{ padding: "80px 24px", maxWidth: 900, margin: "0 auto" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
                     {[
-                        { icon: "Aa", color: G.accent, title: t.feat1Title, desc: t.feat1Desc },
-                        { icon: "◉", color: G.ok, title: t.feat2Title, desc: t.feat2Desc },
-                        { icon: "✦", color: G.warn, title: t.feat3Title, desc: t.feat3Desc },
+                        { icon: "≡", color: G.accent, title: t.feat1Title, desc: t.feat1Desc },
+                        { icon: "▣", color: G.ok, title: t.feat2Title, desc: t.feat2Desc },
+                        { icon: "◈", color: G.warn, title: t.feat3Title, desc: t.feat3Desc },
                     ].map(({ icon, color, title, desc }) => (
                         <div key={title} style={{
                             background: G.surface, border: `1px solid ${G.border}`,
@@ -81,7 +114,7 @@ export default function HomePage({ setPage, lang }) {
             </section>
 
             {/*Cómo funciona*/}
-            <section style={{ padding: "0 24px 80px", maxWidth: 900, margin: "0 auto" }}>
+            <section style={{ padding: "0 24px 32px", maxWidth: 900, margin: "0 auto" }}>
                 <h2 style={{
                     fontFamily: fonts.display, fontWeight: 800, fontSize: 28,
                     letterSpacing: "-0.03em", color: G.text, marginBottom: 40, textAlign: "center",
@@ -90,10 +123,10 @@ export default function HomePage({ setPage, lang }) {
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
                     {[
-                        { n: "01", title: t.step1Title, desc: t.step1Desc },
-                        { n: "02", title: t.step2Title, desc: t.step2Desc },
-                        { n: "03", title: t.step3Title, desc: t.step3Desc },
-                    ].map(({ n, title, desc }) => (
+                        { n: "01", title: t.step1Title, desc: t.step1Desc, Dibujo: ComicHoot2Paso1 },
+                        { n: "02", title: t.step2Title, desc: t.step2Desc, Dibujo: ComicHoot2Paso2 },
+                        { n: "03", title: t.step3Title, desc: t.step3Desc, Dibujo: ComicHoot2Paso3 },
+                    ].map(({ n, title, desc, Dibujo }) => (
                         <div key={n} style={{ textAlign: "center", padding: "0 16px" }}>
                             <div style={{
                                 fontFamily: fonts.mono, fontSize: 40, fontWeight: 700,
@@ -107,6 +140,7 @@ export default function HomePage({ setPage, lang }) {
                             }}>
                                 {desc}
                             </div>
+                            <Dibujo style={{ width: "100%", height: "auto" }}/>
                         </div>
                     ))}
                 </div>

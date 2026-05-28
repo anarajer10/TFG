@@ -56,6 +56,7 @@ export default function App(){
 
   function handleNavChange(newPage){
     clearResult();
+    setSelectedResult(null);
     window.location.hash = newPage;
     setPage(newPage);
   }
@@ -84,7 +85,7 @@ export default function App(){
       {page === "result" && (selectedResult || result) ? (
         <ResultPage
           result={selectedResult || result}
-          onBack={() => { clearResult(); setSelectedResult(null); window.Location.hash = 'analyze'; setPage("analyze"); }}
+          onBack={() => { clearResult(); setSelectedResult(null); window.location.hash = 'analyze'; setPage("analyze"); }}
           lang={lang}
         />
       ) : page === "dashboard" ? (

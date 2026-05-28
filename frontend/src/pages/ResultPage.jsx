@@ -2,7 +2,7 @@ import { theme as G, fonts } from "../constants/theme";
 import { Card, Pill, Button, SectionTitle } from "../components/ui";
 import { MetricBar, ScoreDial } from "../components/shared";
 import { clamp, imagenMeta, sentimientoLabel, confianzaLabel, formatFecha } from "../utils/formatters";
-import { translation } from "../constants/translations";
+import { translation } from "../constants/i18n";
 
 export default function ResultPage({ result, onBack, lang }) {
     const { valoracion, noticia, fuente_nombre } = result;
@@ -14,6 +14,8 @@ export default function ResultPage({ result, onBack, lang }) {
             verdadera: { label: t.verdadera, color: G.ok, bg: G.okLo, icon: "✓" },
             pendiente: { label: t.pendiente, color: G.warn, bg: G.warnLo, icon: "?" },
         };
+        const prob = parseFloat(valoracion.probabilidad);
+        if (prob >= 0.4 && prob <= 0.6) return m.pendiente;
         return m[valoracion.resultado] ?? m.pendiente;
     })();
 
@@ -151,7 +153,7 @@ export default function ResultPage({ result, onBack, lang }) {
                 </Card>
             </div>
 
-            {/*Explicación XAI*/}
+            {/*Explicación automática*/}
             {valoracion.explicacion && (
                 <Card style={{ marginBottom: 16 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -215,7 +217,7 @@ export default function ResultPage({ result, onBack, lang }) {
                 </div>
             </Card>
 
-            <Button variant="ghost" onClick={onBack}>{t.newAnalisis}</Button>
+            <Button onClick={onBack}>{t.newAnalisis}</Button>
         </div>
     );
 }

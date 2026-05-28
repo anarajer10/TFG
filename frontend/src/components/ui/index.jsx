@@ -35,14 +35,14 @@ export function Pill({color, children}){
 export function Button({children, onClick, disabled, variant = "primary", style}){
     const variants = {
         primary: {
-            background: disabled ? G.accentLo: G.accent,
-            color: disabled ? G.textSub: "#fff",
+            background: disabled ? G.accentLo: G.surface,
+            color: disabled ? G.textSub: G.text,
             border: "none",
         },
         ghost: {
             background: "transparent",
-            color: G.textSub,
-            border: `1px solid ${G.border}`,
+            color: G.text,
+            border: `1px solid ${G.border}66`,
         },
     };
 
@@ -80,6 +80,7 @@ export function Input({label, value, onChange, placeholder, type = "text", multi
         transition: "border-color 0.15s",
         resize: multiline ? "vertical": undefined,
         minHeight: multiline ? 110: undefined,
+        colorScheme: "dark",
     };
 
     return(

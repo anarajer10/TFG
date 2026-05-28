@@ -2,7 +2,9 @@ import { useState } from "react";
 import { theme as G, fonts } from "../constants/theme";
 import { Input, Button, Spinner } from "../components/ui";
 import { extraerNoticia } from "../services/api";
-import { translation } from "../constants/translations";
+import ComicHoot from "../assets/comicHoot.svg?react";
+import ComicHoot2 from "../assets/comicHoot2.svg?react";
+import { translation } from "../constants/i18n";
 
 export default function AnalyzePage({ onAnalyze, loading, error, lang }) {
     const [form, setForm] = useState({
@@ -83,11 +85,14 @@ export default function AnalyzePage({ onAnalyze, loading, error, lang }) {
             )}
             <div style={{ position: "fixed", left: "calc(50% - 430px)", top: "15%", width: 2, height: "60vh", background: `linear-gradient(to bottom, transparent, ${G.accent}44, transparent)`, pointerEvents: "none" }} />
             <div style={{ position: "fixed", right: "calc(50% - 430px)", top: "15%", width: 2, height: "60vh", background: `linear-gradient(to bottom, transparent, ${G.accent}44, transparent)`, pointerEvents: "none" }} />
+            <ComicHoot style={{ position: "fixed", left: "calc(50% - 650px)", top: "15%", width: "auto", height: "75vh", opacity: 0.3, pointerEvents: "none" }} />
+            <ComicHoot2 style={{ position: "fixed", right: "calc(50% - 650px)", top: "15%", width: "auto", height: "75vh", opacity: 0.3, pointerEvents: "none" }} />
+            
             {/*Cabecera*/}
             <div style={{ marginBottom: 32 }}>
                 <h1 style={{
                     fontFamily: fonts.display, fontSize: 28, fontWeight: 800,
-                    letterSpacing: "-0.03em", marginBottom: 6,
+                    letterSpacing: "-0.03em", marginBottom: 6, color: G.text,
                 }}>
                     {t.title}
                 </h1>

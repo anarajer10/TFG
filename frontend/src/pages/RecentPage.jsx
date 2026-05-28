@@ -3,7 +3,7 @@ import { theme as G, fonts } from "../constants/theme";
 import { Pill } from "../components/ui"
 import { statusMeta, confianzaLabel, formatFecha } from "../utils/formatters";
 import { getRecientes } from "../services/api";
-import { translation } from "../constants/translations";
+import { translation } from "../constants/i18n";
 
 function NewsCard({ r, onClick }) {
     const { color, label } = statusMeta(r.valoracion.resultado);

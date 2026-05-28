@@ -1,6 +1,6 @@
 import { fonts, theme as G } from "../../constants/theme";
 import { clamp, confianzaLabel, scoreColor } from "../../utils/formatters";
-import { translation } from "../../constants/translations";
+import { translation } from "../../constants/i18n";
 import HootLogo from '../../assets/hoot_logo.svg?react'
 
 // Navbar

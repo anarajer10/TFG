@@ -4,7 +4,7 @@ import { Card, Pill, SectionTitle } from "../components/ui";
 import { MetricBar } from "../components/shared";
 import { statusMeta, imagenMeta, confianzaLabel, formatFecha } from "../utils/formatters";
 import { getMetricas } from "../services/api";
-import { translation } from "../constants/translations";
+import { translation } from "../constants/i18n";
 
 function DonutRing({ value, color, label }){
     const r = 30, c = 2*Math.PI*r;
@@ -69,6 +69,11 @@ export default function DashboardPage({ history, onSelect, lang }){
                 <p style={{ color: G.textSub }}>{t.subtitle}</p>
             </div>
 
+            <h2 style={{ fontFamily: fonts.display, fontWeight: 800, fontSize: 18, letterSpacing: "-0.02em",
+                color: G.text, marginBottom: 16 }}>
+                    {t.seccionModelo}
+                </h2>
+
             {metricas && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
                     {[
@@ -96,6 +101,11 @@ export default function DashboardPage({ history, onSelect, lang }){
                     })}
                 </div>
             )}
+
+            <h2 style={{ fontFamily: fonts.display, fontWeight: 800, fontSize: 18, letterSpacing: "-0.02em",
+                color: G.text, marginBottom: 16, marginTop: 32, paddingTop: 32, borderTop: `1px solid ${G.border}` }}>
+                    {t.seccionSesion}
+                </h2>
 
             {total === 0 ? (
                 <Card style={{ textAlign: "center", padding: "60px 24px" }}>
