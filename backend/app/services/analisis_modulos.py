@@ -3,8 +3,8 @@ from sqlmodel import Session
 from app.models.schema import Noticia, Valoracion, EtiquetaEnum, ImagenEnum
 from app.modules.analisis_texto import analizar_texto
 from app.modules.analisis_imagen import analizar_imagen
-from app.modules.explicacion_XAI import generar_explicacion
-from app.modules.prediccion import predecir
+from backend.app.modules.explicacion_automatica import generar_explicacion
+from app.modules.prediccion import predecir, _detectar_idioma
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,9 @@ def _ajustar_con_imagen(prob_falsa: float, resultado_imagen: dict | None) -> flo
     elif estatus == ImagenEnum.fuera_contexto:
         ela = resultado_imagen.get("ela_score", -1.0)
         if ela != -1.0 and ela > 15:
-            prob_falsa = min(prob_falsa + 0.15, 1.0)
+            prob_falsa = min(prob_falsa + 0.15, 0.99)
         else:
-            prob_falsa = min(prob_falsa + 0.1, 1.0)
+            prob_falsa = min(prob_falsa + 0.1, 0.99)
 
     return round(prob_falsa, 4)
 
@@ -36,7 +36,7 @@ def _ajustar_con_texto(prob_falsa: float, resultado_texto: dict) -> float:
     if resultado_texto.get("punt_sentimiento", 0.0) < -0.3:
         ajuste += 0.05
 
-    return round(min(prob_falsa + ajuste, 1.0), 4)
+    return round(min(prob_falsa + ajuste, 0.99), 4)
 
 # Nivel de confianza de la predicción
 def _nivel_confianza(prob_falsa: float) -> str:
@@ -58,6 +58,10 @@ def procesar_analisis_noticia(session: Session, noticia_id: int, lang: str = "es
     
     try:
         logger.info(f"Análisis {noticia.titulo[:50]}")
+
+        if not lang:
+            texto_det = f"{noticia.titulo}. {noticia.descripcion}"
+            lang = _detectar_idioma(texto_det)
 
         # Predicción principal con el modelo entrenado
         etiqueta_modelo, prob_falsa = predecir(noticia.titulo, noticia.descripcion, lang=lang)
@@ -85,12 +89,12 @@ def procesar_analisis_noticia(session: Session, noticia_id: int, lang: str = "es
         else:
             val = EtiquetaEnum.falsa if prob_final >= 0.5 else EtiquetaEnum.verdadera
 
-        # Explicación XAI con Ollama
+        # Explicación automática con Ollama
         try:
             explicacion = generar_explicacion(resultado_imagen or {}, resultado_texto, titulo=noticia.titulo, lang=lang, prob_falsa=prob_final)
             logger.info(f"Explicación generada: {explicacion[:1000]}")
         except Exception as e:
-            logger.warning(f"XAI no disponible: {e}")
+            logger.warning(f"Explicación automática no disponible: {e}")
             indicadores = ", ".join(resultado_texto.get("indicadores", []))
             sin_indicadores = indicadores or "ninguno"
             explicacion = (

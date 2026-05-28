@@ -27,7 +27,7 @@ def start_scheduler():
     # Se hará el scraping una vez cada 24 horas
     scheduler.add_job(_run_scrapers, "interval", hours=24)
     # Para que haga un scraping nada más encender el contenedor
-    scheduler.add_job(_run_scrapers)
+    # scheduler.add_job(_run_scrapers)
     scheduler.start()
     logger.info("Scheduler activado")
 

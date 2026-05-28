@@ -71,7 +71,7 @@ class NoticiaPublic(NoticiaBase):
 class NoticiaCreate(NoticiaBase):
     # Se almacenan el nombre de la fuente y el idioma como datos de entrada (no como columnas iniciales en la BD)
     fuente_nombre: str | None = None
-    lang: str | None = "es" # por defecto en español
+    lang: str | None = None # por defecto en español
 
 # Como se ha eliminado el Update de la API, de momento esto se deja comentado
 """

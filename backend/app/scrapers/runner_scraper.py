@@ -269,9 +269,9 @@ def analizar_noticias_pendientes(limit: int = 100):
         if analyzed_ids:
             stmt = select(Noticia).where(
                 sa.not_(Noticia.id.in_(analyzed_ids))
-            ).limit(limit)
+            ).order_by(Noticia.id.desc()).limit(limit)
         else:
-            stmt = select(Noticia).limit(limit)
+            stmt = select(Noticia).order_by(Noticia.id.desc()).limit(limit)
 
         pendientes = session.exec(stmt).all()
         print(f"Noticias pendientes de análisis: {len(pendientes)}")

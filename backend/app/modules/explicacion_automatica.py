@@ -1,4 +1,4 @@
-# La explicación XAI se hace con Ollama (llama3.2:3b)
+# La explicación automática se hace con Ollama (llama3.2:3b)
 # Recibe los resultados de ambos análisis y genera una explicación en lenguaje natural con una justificación
 import os
 import logging
@@ -113,13 +113,19 @@ def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str
     objetividad = _interpretar_objetividad(resultado_texto.get("punt_objetividad", -1.0))
     emocion = _interpretar_emocion(resultado_texto.get("emocion", "-"))
     indicadores = _interpretar_indicadores(resultado_texto.get("indicadores", []))
+    dist = abs(prob_falsa - 0.5)
+    confianza_es = "Alta" if dist >= 0.3 else "Media" if dist >= 0.15 else "Baja"
+    confianza_en = "High" if dist >= 0.3 else "Medium" if dist >= 0.15 else "Low"
+
 
     if lang == "en":
         prompt = f"""You are an expert system in disinformation and fake news detection.
         Your task is to generate a clear, detailed explanation in English about the analysis performed on the following news article.
 
         News title: "{titulo}"
-        Model fake probability: {round(prob_falsa*100, 1)}%
+        Model fake probability: {round(prob_falsa*100, 1)}% (a low probability means the model considers the article TRUE; a high probability means FAKE)
+        Model verdict: {"FAKE" if prob_falsa >= 0.6 else "TRUE" if prob_falsa <= 0.4 else "UNDETERMINED"}
+        Model confidence: {confianza_en}
 
         Image analysis: 
         {ela}
@@ -134,20 +140,24 @@ def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str
         {emocion}
         {indicadores}
 
-        IMPORTANT: Your entire response MUST be in English. All section headers MUST be written in English.
+        IMPORTANT: Your entire response must be in English. All section headers MUST be written in English.
+        Format each section header with double asterisks exactly like this: **General verdict**, **Image analysis**, **Text analysis**, **Final classification**, **Confidence level**. Do not use any other header format such as "Header:" or "# Header".
 
         Instructions:
-        Generate a complete XAI (Explainable Artificial Intelligence) explanation in English that does the following things:
-        1. **General verdict** : Summarise in one sentence the general verdict on the news article.
+        Generate a complete automatic explanation in English that does the following things:
+        1. **General verdict** : Summarise in one sentence the general verdict on the news article (Do not conduct your own fact-checking, base your verdict solely on the model's classification).
         2. **Image analysis** : Explain in detail what each image analysis metric indicates and why it is relevant for detecting disinformation.
         3. **Text analysis** : Explain in detail what each text analysis metric indicates and how it contributes to the final verdict.
         4. **Final classification** : Evaluate whether the model's fake probability seems coherent with the analysed indicators and explain clearly, 
             and justify the final classification coherently with all the above data.
-        5. **Confidence level** : State the general confidence level for analysis (high, medium or low) and why.
+        5. **Confidence level** : The model confidence level is {confianza_en}. Confidence reflects how far the probability is from 50%: the closer to 0%, the more certain the model is that
+            the article is TRUE; the closer to 100%, the more certain it is FAKE. Between 40% and 60% the result is undetermined, leaning towards TRUE if below 50% and towards FAKE if above.
 
         Be clear and accessible for a non-technical user. Write each section as a paragraph, not bullet points
         Do not invent additional data nor ramble, if a metric indicates it could not be analysed or has a negative value,
-        mention it as limitation of the analysis performed.
+        mention it as limitation of the analysis performed. Don't use your world knowledge to verify whether the news is false or true,
+        your task is simply to explain what the text and image indicators show, and the verdict is determined by the model, not you.
+        Do not use bold markdown (**text**) within paragraphs to highlight values, only use it for section headers.
         """
     else:
         prompt = f"""Eres un sistema experto en detección de desinformación y fake news.
@@ -155,6 +165,8 @@ def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str
 
         Título de la noticia: "{titulo}"
         Probabilidad del modelo para asignarla como falsa: {round(prob_falsa*100, 1)}%
+        Veredicto del modelo: {"FALSA" if prob_falsa >= 0.6 else "VERDADERA" if prob_falsa <= 0.4 else "INDETERMINADA"}
+        Nivel de confianza del modelo: {confianza_es}
 
         Análisis de la imagen: 
         {ela}
@@ -169,23 +181,31 @@ def _construir_prompt(resultado_imagen: dict, resultado_texto: dict, titulo: str
         {emocion}
         {indicadores}
 
+        IMPORTANTE: Escribe cada título de sección con dobles asteriscos exactamente así: **Veredicto general**, **Análisis de la imagen**, **Análisis del texto**, **Clasificación final**, 
+        **Nivel de confianza**. No uses ningún otro formato de título como "Título:" o "# Título".
+
         Instrucciones:
-        Genera una explicación XAI (Inteligencia Artificial Explicable) completa en español que haga las siguientes cosas:
-        1. Resuma en una frase el veredicto general de la noticia.
+        Genera una explicación automática completa en español que haga las siguientes cosas:
+        1. Resuma en una frase el veredicto general de la noticia (no realices verificación de hechos propia, basa el veredicto exclusivamente en la clasificación del modelo).
         2. Explique de forma detallada qué indica cada métrica del análisis de imagen y por qué es relevante para detectar desinformación.
         3. Explique de forma detallada qué indica cada métrica del análisis de texto y cómo contribuye al veredicto final.
         4.  Evalúa si la probabilidad del modelo es coherente con los indicadores analizados y explícalo con claridad y justifique 
             la clasificación final de forma coherente con todos los datos anteriores.
-        5. Indique el nivel de confianza general de análisis (alto, medio o bajo) y por qué.
+        5. Indique el nivel de confianza del análisis como {confianza_es}. La confianza refleja cuánto se aleja la probabilidad del 50%: cuanto más cercana a 0%, más seguro
+            es el modelo de que la noticia es VERDADERA; cuanto más cercana a 100%, más seguro es de que es FALSA. Entre el 40% y el 60% el resultado es indeterminado, con
+            tendencia a verdadera si está por debajo del 50% y a falsa si está por encima.
+
 
         Sé claro, preciso y accesible para un usuario no técnico. No uses listas con viñetas, redacta en párrafos.
         No inventes datos adicionales ni desvaríes, si una métrica indica que no se ha podido analizar o tiene un valor negativo,
-        menciónalo como una limitación del análisis realizado.
+        menciónalo como una limitación del análisis realizado. No uses tu conocimiento del mundo para verificar si la noticia es falsa o verdadera,
+        tu tarea es solo explicar qué indican los indicadores de texto e imagen, y el veredicto lo determina el modelo, no tú.
+        No uses formato markdown en negrita (**texto**) dentro de los párrafos para resaltar valores, solo úsalo para los títulos de cada sección.
         """
 
     return prompt
 
-# Llamada a Ollama para generar la explicación XAI en lenguaje natural
+# Llamada a Ollama para generar la explicación automática en lenguaje natural
 def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: str = "", lang: str = "es", prob_falsa = 0.5) -> str:
     prompt = _construir_prompt(resultado_imagen, resultado_texto, titulo, lang, prob_falsa)
 
@@ -215,5 +235,5 @@ def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: s
         return "Timeout"
     
     except Exception as e:
-        logger.error(f"Error generando la explicación XAI: {e}")
+        logger.error(f"Error generando la explicación automática: {e}")
         return "No se ha podido generar la explicación"
