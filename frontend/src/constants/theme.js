@@ -1,19 +1,19 @@
 export const theme = {
-    bg:         "#0D0B1A",
-    surface:    "#13112A",
-    card:       "#1A1836",
-    border:     "#2A2750",
-    accent:     "#534AB7",
-    accentLo:   "#1E1A45",
+    bg:         "#281c78",
+    surface:    "#120f2c",
+    card:       "#25215e",
+    border:     "#504ba2",
+    accent:     "#ffdb64",
+    accentLo:   "#391b6e",
     danger:     "#E24B4A",
     dangerLo:   "#2A0F0F",
     warn:       "#BA7517",
     warnLo:     "#2A1A05",
     ok:         "#1D9E75",
     okLo:       "#072B1E",
-    muted:      "#5A5780",
-    text:       "#EDEAF8",
-    textSub:    "#9B97C0",
+    muted:      "#746adf",
+    text:       "#f4f8ea",
+    textSub:    "#fffbca",
 };
 
 export const fonts = {
