@@ -76,7 +76,7 @@ export default function RecentPage({ onSelect, lang }) {
 
     function cargar(l = filtroLang) {
         setLoading(true);
-        getRecientes(20, l).then(data => { setNoticias(data); setError(null); })
+        getRecientes(24, l).then(data => { setNoticias(data); setError(null); })
             .catch(() => setError(t.error)).finally(() => setLoading(false));
     }
 

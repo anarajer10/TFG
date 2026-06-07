@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { theme as G, fonts } from "../constants/theme";
 import { Card, Pill, Button, SectionTitle } from "../components/ui";
 import { MetricBar, ScoreDial } from "../components/shared";
@@ -7,6 +8,7 @@ import { translation } from "../constants/i18n";
 export default function ResultPage({ result, onBack, lang }) {
     const { valoracion, noticia, fuente_nombre } = result;
     const t = translation[lang].result;
+    const [copiado, setCopiado] = useState(false);
 
     const vMeta = (() => {
         const m = {
@@ -216,8 +218,17 @@ export default function ResultPage({ result, onBack, lang }) {
                     ))}
                 </div>
             </Card>
-
-            <Button onClick={onBack}>{t.newAnalisis}</Button>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    <Button onClick={onBack}>{t.newAnalisis}</Button>
+                    <Button onClick={() => {
+                        const url = `${window.location.origin}/#result/${valoracion.noticia_id}`;
+                        navigator.clipboard.writeText(url)
+                        .then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000); })
+                        .catch(() => prompt("Copia esta URL:", url));
+                    }}>
+                        {copiado ? t.copiado: t.compartir}
+                    </Button>
+            </div>
         </div>
     );
 }

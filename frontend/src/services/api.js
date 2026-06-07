@@ -40,10 +40,12 @@ export async function extraerNoticia(url){
     return request(`/extraer?url=${encodeURIComponent(url)}`, {}, 30000); // 30 segundos
 }
 
+
 // GET /noticias
-export async function getNoticias({offset=0, limit=100} = {}){
+/*export async function getNoticias({offset=0, limit=100} = {}){
     return request(`/noticias?offset=${offset}&limit=${limit}`);
 }
+*/
 
 // GET /noticias/:id
 export async function getNoticia(id){

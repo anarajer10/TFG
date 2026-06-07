@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getNoticia } from "./services/api";
 import { theme as G, googleFonts } from "./constants/theme";
 import { Navbar } from "./components/shared";
 import { useAnalysis } from "./hooks/useAnalysis";
@@ -27,7 +28,13 @@ const globalCss = `
 `;
 
 export default function App(){
-  const [page, setPage] = useState(() => window.location.hash.replace('#', '') || 'home');
+  const parseHash = () => {
+    const hash = window.location.hash.replace('#', '') || 'home';
+    const [p, id] = hash.split('/');
+    return { page: p || 'home', id: id ? parseInt(id): null };
+  };
+  const [page, setPage] = useState(() => parseHash().page);
+  const [urlId, setUrlId] = useState(() => parseHash().id)
   const [lang, setLang] = useState("es");
   const [ selectedResult, setSelectedResult] = useState(null);
   const { loading, error, result, history, analyze, clearResult } = useAnalysis();
@@ -43,8 +50,9 @@ export default function App(){
     document.head.appendChild(style);
 
     const onHash = () => {
-      const h = window.location.hash.replace('#', '') || 'home';
-      setPage(h);
+      const { page: p, id } = parseHash();
+      setPage(p);
+      setUrlId(id);
     };
     window.addEventListener('hashchange', onHash);
     return () => {
@@ -53,6 +61,13 @@ export default function App(){
       window.removeEventListener('hashchange', onHash);
     };
   }, []);
+
+  useEffect(() => {
+    if (urlId && !selectedResult && !result) {
+      getNoticia(urlId).then(data => setSelectedResult(data))
+      .catch(() => { setUrlId(null); setPage('home'); })
+    }
+  }, [urlId])
 
   function handleNavChange(newPage){
     clearResult();
@@ -69,7 +84,7 @@ export default function App(){
 
   function handleSelectResult(r){
     setSelectedResult(r);
-    window.location.hash = 'result';
+    window.location.hash = `result/${r.valoracion.noticia_id}`;
     setPage("result");
   }
   
@@ -80,7 +95,7 @@ export default function App(){
         page={page === "result" ? "analyze" : page } 
         setPage={handleNavChange} 
         lang={lang}
-        setLang={setLang}
+        setLang={(l) => {setLang(l); document.documentElement.lang = l; }}
       />
       {page === "result" && (selectedResult || result) ? (
         <ResultPage

@@ -39,6 +39,7 @@ export const translation = {
             error: "No se han podido cargar las noticias",
             empty: "Sin noticias analizadas",
             emptySubtitle: "Aún no hay noticias analizadas automáticamente",
+            refresh: "Actualizar",
         },
         analyze: {
             title: "Analizar noticia",
@@ -89,6 +90,8 @@ export const translation = {
             fechaPubli: "Fecha de publicación",
             idAnalisis: "id del análisis",
             newAnalisis: "Nuevo análisis",
+            compartir: "Compartir",
+            copiado: "¡Copiado!",
         },
         dashboard: {
             title: "Dashboard",
@@ -152,6 +155,7 @@ export const translation = {
             error: "Could not load articles",
             empty: "No analysed articles",
             emptySubtitle: "No automatically analysed articles yet",
+            refresh: "Refresh",
         },
         analyze: {
             title: "Analyse article",
@@ -202,6 +206,8 @@ export const translation = {
             fechaPubli: "Publication date",
             idAnalisis: "Analysis id",
             newAnalisis: "New analysis",
+            compartir: "Share",
+            copiado: "Copied!",
         },
         dashboard: {
             title: "Dashboard",
