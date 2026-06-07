@@ -84,7 +84,7 @@ class NewUpdate(NewBase):
 """
 
 class ValoracionBase(SQLModel): #Cambio de BaseModel a SQLModel
-    noticia_id: int | None = Field(default=None, foreign_key="noticia.id") # FK a noticia para ligarla a su valoracion
+    noticia_id: int | None = Field(default=None, foreign_key="noticia.id", unique=True) # FK a noticia para ligarla a su valoracion
     # title: str
     # category: str
     resultado: EtiquetaEnum = Field(default=EtiquetaEnum.pendiente)

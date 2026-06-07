@@ -1,8 +1,14 @@
 # Carga el modelo entrenado y crea una función de predicción
 import pickle
 import os
+import re 
+import nltk
+from nltk.stem import SnowballStemmer
+from nltk.corpus import stopwords
 import logging
 from langdetect import detect # type: ignore
+
+nltk.download("stopwords", quiet=True)
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +58,15 @@ def _cargar_modelo(lang: str) -> bool:
         logger.error(f"Error cargando el modelo '{lang}': {e}")
         return False
     
+def _preproc(texto, lang):
+    if lang == "es":
+        return texto
+    stemmer = SnowballStemmer("english")
+    stop_words = set(stopwords.words("english"))
+    tokens = re.findall(r"\b\w+\b", texto.lower())
+    tokens = [stemmer.stem(t) for t in tokens if t not in stop_words and len(t)>1]
+    return " ".join(tokens)
+
 # Predicción de noticias reales/falsas usando el modelo entrenado
 def predecir(titulo: str, descripcion: str, lang: str | None = None) -> tuple[str, float]:
     texto = f"{titulo}. {descripcion}".strip()
@@ -68,7 +83,7 @@ def predecir(titulo: str, descripcion: str, lang: str | None = None) -> tuple[st
             return "pendiente", 0.5
     
     try:
-        X = _vectorizers[lang].transform([texto])
+        X = _vectorizers[lang].transform([_preproc(texto, lang)])
         prob_falsa = float(_modelos[lang].predict_proba(X)[0][1])
         etiqueta = "falsa" if prob_falsa >= 0.5 else "verdadera"
         return etiqueta, round(prob_falsa, 4)

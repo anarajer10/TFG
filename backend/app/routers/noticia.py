@@ -1,4 +1,4 @@
-from typing import Annotated
+# from typing import Annotated
 import logging
 import json
 import os
@@ -22,6 +22,7 @@ def _dominio_fuente(url: str) -> str:
         return url
 
 # Para ver una lista de noticias
+""""
 @router.get("/noticias", response_model=list[NoticiaPublic])
 def get_noticias(
     session: Session = Depends(get_session),
@@ -30,6 +31,8 @@ def get_noticias(
 ):
     noticias = session.exec(select(Noticia).offset(offset).limit(limit)).all()
     return noticias
+
+"""
 
 @router.get("/noticias/recientes", response_model=list[AnalisisResultado])
 def get_noticias_recientes(
@@ -69,13 +72,25 @@ def get_noticias_recientes(
 
     return resultado
 
+
 # Pra ver una noticia dado su id
-@router.get("/noticias/{id}", response_model=NoticiaPublic)
+@router.get("/noticias/{id}", response_model=AnalisisResultado)
 def get_noticia(id: int = Path(gt=0), session: Session = Depends(get_session)):
     noticia = session.get(Noticia, id)
     if not noticia:
         raise HTTPException(status_code=404, detail="Noticia no encontrada")
-    return noticia
+    valoracion = session.exec(
+        select(Valoracion).where(Valoracion.noticia_id == id)
+        .order_by(Valoracion.fecha_analisis.desc())
+    ).first()
+    if not valoracion:
+        raise HTTPException(status_code=404, detail="Análisis no encontrado")
+    fuente = session.get(Fuente, noticia.fuente_id) if noticia.fuente_id else None
+    return AnalisisResultado(
+        noticia=NoticiaPublic.model_validate(noticia),
+        valoracion=ValoracionPublic.model_validate(valoracion),
+        fuente_nombre=fuente.nombre if fuente else None
+    )
 
 # Análisis de la noticia introducida
 @router.post("/analizar", response_model=AnalisisResultado)

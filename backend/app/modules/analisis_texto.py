@@ -158,7 +158,7 @@ def analizar_texto(texto: str, titulo: str = "", lang: str = "es") -> dict:
         # análisis de objetividad con spacy
         objetividad_heu = _calcular_objetividad(texto, prep, lang)
         prob_neu = probas.get("NEU", 0.5)
-        resultado["punt_objetividad"] = round(prob_neu * 0.6 + objetividad_heu * 0.4, 4)
+        resultado["punt_objetividad"] = round(prob_neu * 0.7 + objetividad_heu * 0.3, 4)
 
         # indicadores de sensacionalismo
         indicadores = []

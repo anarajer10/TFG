@@ -3,7 +3,7 @@ from sqlmodel import Session
 from app.models.schema import Noticia, Valoracion, EtiquetaEnum, ImagenEnum
 from app.modules.analisis_texto import analizar_texto
 from app.modules.analisis_imagen import analizar_imagen
-from backend.app.modules.explicacion_automatica import generar_explicacion
+from app.modules.explicacion_automatica import generar_explicacion
 from app.modules.prediccion import predecir, _detectar_idioma
 from datetime import datetime
 
@@ -31,10 +31,10 @@ def _ajustar_con_imagen(prob_falsa: float, resultado_imagen: dict | None) -> flo
 def _ajustar_con_texto(prob_falsa: float, resultado_texto: dict) -> float:
     ajuste = 0.0
 
-    if resultado_texto.get("punt_objetividad", 1.0) < 0.4:
-        ajuste += 0.05
-    if resultado_texto.get("punt_sentimiento", 0.0) < -0.3:
-        ajuste += 0.05
+    if resultado_texto.get("punt_objetividad", 1.0) < 0.45:
+        ajuste += 0.07
+    if resultado_texto.get("punt_sentimiento", 0.0) < -0.2:
+        ajuste += 0.07
 
     return round(min(prob_falsa + ajuste, 0.99), 4)
 
