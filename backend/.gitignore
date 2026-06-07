@@ -27,10 +27,8 @@ dataset_fakenews/
 dataset_liar/
 dataset_fakenewsnet/
 
-# Métricas y comparaciones de los algoritmos
-metricas.json
-metricas_*.json
-comparativa_*.json
+# Métricas y comparativas en formato .json
+*.json
 
 # BD
 *.db

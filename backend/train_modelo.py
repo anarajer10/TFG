@@ -1,22 +1,30 @@
 # Entrenamiento y comparación de modelos para la clasificación de fake news
-# Se usan (de momento) Logistic Regression, Random Forest y Gradient Boosting
-# Se entrena por un lado con el dataset en español y por otro con el dataset completo, mixto.
+# Se usan (de momento) Logistic Regression, Random Forest, Multinomial NB, LinearSVC y Gradient Boosting
+# Se entrena por un lado con el dataset en español y por otro con el dataset en inglés.
 
 import json
 import pickle
 import sys
 import os
+import re
+import nltk
+from nltk.stem import SnowballStemmer
+from nltk.corpus import stopwords
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.utils.class_weight import compute_class_weight
+
+nltk.download("stopwords", quiet=True)
 
 RUTAS_MODELO = {
     "es": ("modelo_es.pkl", "vectorizer_es.pkl"),
@@ -47,6 +55,17 @@ def _metricas_cv(nombre: str, pipeline: Pipeline, X: pd.Series, y: pd.Series) ->
           f"Accuracy={result['cv_acc_media']:.3f}")
     return result
 
+def _preproc(texts, lang):
+    if lang == "es":
+        return texts
+    stemmer = SnowballStemmer("english")
+    stop_words = set(stopwords.words("english"))
+    result = []
+    for text in texts:
+        tokens = re.findall(r"\b\w+\b", text.lower())
+        tokens = [stemmer.stem(t) for t in tokens if t not in stop_words and len(t)>1]
+        result.append(" ".join(tokens))
+    return pd.Series(result)
 
 # Entrena el modelo y devuelve las métricas
 def entrenar(dataset_csv: str, sufijo: str) -> dict:
@@ -69,6 +88,7 @@ def entrenar(dataset_csv: str, sufijo: str) -> dict:
         return {}
 
     X = df["texto"].fillna("")
+    X = _preproc(X, sufijo)
     y = df["label"]
 
     clases = np.unique(y)
@@ -88,6 +108,14 @@ def entrenar(dataset_csv: str, sufijo: str) -> dict:
         "LinearSVC": Pipeline([
             ("tfidf", TfidfVectorizer(**TFIDF_PARAMS)),
             ("clf", CalibratedClassifierCV(LinearSVC(max_iter=2000, class_weight=pesos_dict), cv=3)),
+        ]),
+        "GradientBoosting": Pipeline([
+            ("tfidf", TfidfVectorizer(**TFIDF_PARAMS)),
+            ("clf", GradientBoostingClassifier(n_estimators=100, random_state=42)),
+        ]),
+        "MultinomialNB": Pipeline([
+            ("tfidf", TfidfVectorizer(**TFIDF_PARAMS)),
+            ("clf", MultinomialNB()),
         ]),
     }
 

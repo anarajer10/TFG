@@ -6,7 +6,7 @@ import pandas as pd
 from io import BytesIO
 from langdetect import detect # type: ignore
 
-DATASET_CSV = "dataset.csv" # Datos de la BD (scrapers)
+# DATASET_CSV = "dataset.csv" # Datos de la BD (scrapers)
 # DATASET_FUSIONADO = "dataset_completo.csv" # En español e inglés mezclados
 DATASET_ES = "dataset_es.csv" # en español solo
 DATASET_EN = "dataset_en.csv" # en inglés solo
@@ -27,11 +27,13 @@ CARPETA_FAKENEWS = "dataset_fakenews"
 CARPETA_FAKENEWSNET = "dataset_fakenewsnet"
 
 # Para saber si las notcias de la BD son en español o no
+""""
 def _es_espanol(texto: str) -> bool:
     try:
         return detect(texto[:300]) == "es"
     except:
         return False
+"""
 
 def cargar_liar() -> pd.DataFrame:
     # Descarga de LIAR 
@@ -171,40 +173,22 @@ def fusionar():
     df_fakedes = cargar_fakedes()
     # df_fakenews_en = cargar_fakenews()
 
-    df_propio = pd.DataFrame()
-    if os.path.exists(DATASET_CSV):
-        df_propio = pd.read_csv(DATASET_CSV)[["texto", "label"]]
-        print(f"{len(df_propio)} del dataset propio (BD)")
-    else:
-        print("No se ha podido encontrar el dataset.csv, por lo que solo se usarán los externos")
-
-   # Dataset solo en español con FakeDeS y datos de los scrapers
-    dfs_es = [df_fakedes]
-    if not df_propio.empty:
-        df_propio_es = df_propio[df_propio["texto"].apply(_es_espanol)]
-        print(f"{len(df_propio_es)} muestras en el dataset de la BD filtrando por aquellas en español")
-        dfs_es.append(df_propio_es)
-    df_es = pd.concat(dfs_es, ignore_index=True).drop_duplicates(subset="texto")
-    _resumen("Dataset en espalol (dataset_es.csv)", df_es)
+   # Dataset solo en español con FakeDeS
+    df_es = df_fakedes.drop_duplicates(subset="texto")
+    _resumen("Dataset en español (dataset_es.csv)", df_es)
     df_es.to_csv(DATASET_ES, index=False, encoding="utf-8")
 
-    # Dataset solo en inglés con PolitiFact y BuzzFeed y datos de los scrapers
+    # Dataset solo en inglés con PolitiFact y BuzzFeed
     df_politifact = cargar_politifact() 
     df_buzzfeed = cargar_buzzfeed()
 
     df_en_raw = pd.concat([df_politifact, df_buzzfeed], ignore_index=True).drop_duplicates(subset="texto")
     n_por_clase = int((df_en_raw['label'] == 1).sum()) # para limitar al mínimo, que es la clase Fake
-    df_en_bal = pd.concat([
+    df_en = pd.concat([
         df_en_raw[df_en_raw['label'] == 0].sample(n_por_clase, random_state=42),
         df_en_raw[df_en_raw['label'] == 1],
     ], ignore_index=True).sample(frac=1, random_state=42)
 
-    dfs_en = [df_en_bal]
-    if not df_propio.empty:
-        df_propio_en = df_propio[~df_propio["texto"].apply(_es_espanol)]
-        print(f"{len(df_propio_en)} muestras en el dataset de la BD filtrando por aquellas en inglés")
-        dfs_en.append(df_propio_en)
-    df_en = pd.concat(dfs_en, ignore_index=True).drop_duplicates(subset="texto").sample(frac=1, random_state=42)
     _resumen("Dataset en inglés (dataset_en.csv)", df_en)
     df_en.to_csv(DATASET_EN, index=False, encoding="utf-8")
 
