@@ -116,7 +116,7 @@ class NewtralScraper(ScraperBase):
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,
-                "etiqueta": EtiquetaEnum.falsa # Newtral publica bulos desmentidos
+                "etiqueta": EtiquetaEnum.pendiente 
             }
         
         except Exception as e:

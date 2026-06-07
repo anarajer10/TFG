@@ -124,7 +124,7 @@ class APNewsScraper(ScraperBase):
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,
-                "etiqueta": EtiquetaEnum.verdadera # AP News publica noticias verificadas
+                "etiqueta": EtiquetaEnum.pendiente 
             }
         
         except Exception as e:

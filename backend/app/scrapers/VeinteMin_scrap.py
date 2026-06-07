@@ -97,6 +97,7 @@ class VeinteMinScraper(ScraperBase):
                 clean_paragraphs.append(text)
 
             content = "\n\n".join(clean_paragraphs)
+            content = content[:60000] #Límite por debajo de lo que admite TEXT
             
             return {
                 "titulo": titulo,

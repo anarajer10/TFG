@@ -112,7 +112,7 @@ class RTVEScraper(ScraperBase):
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,
-                "etiqueta": EtiquetaEnum.verdadera # RTVE publica noticias reales de forma imparcial
+                "etiqueta": EtiquetaEnum.pendiente 
             }
         
         except Exception as e:

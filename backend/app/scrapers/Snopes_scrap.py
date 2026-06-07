@@ -97,13 +97,6 @@ class SnopesScraper(ScraperBase):
                 clean_paragraphs.append(text)
 
             content = "\n\n".join(clean_paragraphs)
-
-            etiqueta = EtiquetaEnum.falsa
-            imagen_rating = soup.select_one('div.rating-wrapper img')
-            if imagen_rating and imagen_rating.get('alt'):
-                imagen_rating = imagen_rating.get('alt').lower()
-                if 'true' in imagen_rating or 'correct'in imagen_rating:
-                    etiqueta = EtiquetaEnum.verdadera
             
             return {
                 "titulo": titulo,
@@ -115,7 +108,7 @@ class SnopesScraper(ScraperBase):
                 "fecha_publi": fecha_publi,
                 "texto_url": url,
                 "imagen_url": imagen_url,
-                "etiqueta": etiqueta # AP News publica noticias verificadas
+                "etiqueta": EtiquetaEnum.pendiente 
             }
         
         except Exception as e:
