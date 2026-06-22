@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { theme as G, fonts } from "../constants/theme";
-import { Pill } from "../components/ui"
+import { Pill, Button } from "../components/ui"
 import { statusMeta, confianzaLabel, formatFecha } from "../utils/formatters";
 import { getRecientes } from "../services/api";
 import { translation } from "../constants/i18n";
 
+// Tarjeta de noticia para la vista de Recientes. Al hacer clic lleva al resultado completo (vista Resultado)
 function NewsCard({ r, onClick }) {
     const { color, label } = statusMeta(r.valoracion.resultado);
     const conf = confianzaLabel(r.valoracion.probabilidad);
     const [hovered, setHovered] = useState(false);
 
     return (
-        <div onClick={onClick}
+        <div onClick={onClick} role="button" tabIndex={0}
+            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onClick(); }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             style={{
@@ -25,7 +27,7 @@ function NewsCard({ r, onClick }) {
         >
             <div style={{ position: "relative", height: 160, background: G.card, flexShrink: 0 }}>
                 {r.noticia.imagen_url ? (
-                    <img src={r.noticia.imagen_url} alt=""
+                    <img src={r.noticia.imagen_url} alt={r.noticia.titulo}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         onError={e => { e.target.style.display = "none"; }} />
                 ) : (
@@ -67,6 +69,7 @@ function NewsCard({ r, onClick }) {
     );
 }
 
+// Muestra las últimas noticias analizadas por el sistema (de los scrapers y las analizadas manualmente en la sesión)
 export default function RecentPage({ onSelect, lang }) {
     const t = translation[lang].recientes;
     const [noticias, setNoticias] = useState([]);
@@ -74,6 +77,7 @@ export default function RecentPage({ onSelect, lang }) {
     const [error, setError] = useState(null);
     const [filtroLang, setFiltroLang] = useState(null);
 
+    // Recarga las noticias aplicando el filtro de idioma activo
     function cargar(l = filtroLang) {
         setLoading(true);
         getRecientes(24, l).then(data => { setNoticias(data); setError(null); })
@@ -109,22 +113,20 @@ export default function RecentPage({ onSelect, lang }) {
                             { v: "es", label: "ES" },
                             { v: "en", label: "EN" },
                         ].map(({ v, label}) => (
-                            <button key={label} onClick={() => { setFiltroLang(v); cargar(v); }} style={{
-                                padding: "6px 14px", borderRadius: 6, cursor: "pointer", fontFamily: fonts.mono,
-                                fontSize: 12, fontWeight: 600, border: `1px solid ${filtroLang === v ? G.accent: G.border}`,
-                                background: filtroLang === v ? G.accentLo: "transparent", color: filtroLang === v ? G.accent: G.textSub,
+                            <Button key={label} onClick={() => { setFiltroLang(v); cargar(v); }} style={{
+                                padding: "6px 14px", color: filtroLang === v ? G.accent: G.textSub,
+                                fontSize: 12, border: `1px solid ${filtroLang === v ? G.accent: G.border}`,
+                                background: filtroLang === v ? G.accentLo: "transparent", 
                             }}>
                                 {label}
-                            </button>
+                            </Button>
                         ))}
                     </div>
-                    <button onClick={() => cargar()} style={{
-                        background: G.accentLo, border: `1px solid ${G.accent}44`,
-                        borderRadius: 8, padding: "8px 16px", cursor: "pointer",
-                        fontFamily: fonts.body, fontSize: 13, color: G.accent,
+                    <Button onClick={() => cargar()} style={{ 
+                        padding: "8px 16px", fontSize: 13, color: G.accent,
                     }}>
                         {t.refresh}
-                    </button>
+                    </Button>
                 </div>
             </div>
 

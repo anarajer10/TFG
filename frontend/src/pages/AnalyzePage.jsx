@@ -6,6 +6,8 @@ import ComicHoot from "../assets/comicHoot.svg?react";
 import ComicHoot2 from "../assets/comicHoot2.svg?react";
 import { translation } from "../constants/i18n";
 
+// Formulario de análisis, donde el usuario puede introducir los datos a mano o pegar una URL
+// y Extraer para que se rellenen automáticamente los campos. 
 export default function AnalyzePage({ onAnalyze, loading, error, lang }) {
     const [form, setForm] = useState({
         texto_url: "",
@@ -25,6 +27,7 @@ export default function AnalyzePage({ onAnalyze, loading, error, lang }) {
         return (value) => setForm(prev => ({ ...prev, [field]: value }));
     }
 
+    // Validaciones para tener un mínimo de caracteres en Título (10) y Descripción (50)
     function validate() {
         const e = {};
         if (!form.titulo.trim()) e.titulo = t.errorTitulo;
@@ -37,6 +40,7 @@ export default function AnalyzePage({ onAnalyze, loading, error, lang }) {
         return Object.keys(e).length === 0;
     }
 
+    // Llama al endpoint /extraer con la URL dada y rellena el formulario con los datos obtenidos
     async function handleExtraer() {
         if (!form.texto_url.trim()) return;
         setExtraiendo(true);
@@ -67,10 +71,13 @@ export default function AnalyzePage({ onAnalyze, loading, error, lang }) {
     return (
         <div style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px", position: "relative" }}>
             {loading && (
-                <div style={{
+                <div aria-live="polite"
+                role="status"
+                aria-label="Analizando noticia"
+                style={{
                     position: "fixed", bottom: 32, right: 32, background: G.surface, border: `1px solid ${G.accent}66`,
-                    borderRadius: 14, padding: "18px 24px", display: "flex", alignItems: "center", gap: 14,
-                    boxShadow: "0 9px 32px rgba(238, 154, 255, 0.4)", zIndex: 100, minWidth: 220,
+                    borderRadius: 14, padding: "18px 24px", display: "flex", alignItems: "center", gap: 14, 
+                    boxShadow: "0 9px 32px rgba(238, 154, 255, 0.4)", zIndex: 100, minWidth: 220, 
                 }}>
                     <Spinner size={22} />
                     <div>

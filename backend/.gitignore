@@ -40,6 +40,7 @@ logs/
 # Archivos de prueba
 prueba_imagen.py
 prueba_pln.py
+generar_graf.py
 
 # IDEs
 .vscode/

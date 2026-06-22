@@ -1,4 +1,5 @@
 import { theme as G, fonts } from "../../constants/theme";
+import { useState } from "react";
 
 // Card
 export function Card({children, style}){
@@ -33,14 +34,16 @@ export function Pill({color, children}){
 
 // Button
 export function Button({children, onClick, disabled, variant = "primary", style}){
+    const [hovered, setHovered] = useState(false);
+    const active = hovered && !disabled;
     const variants = {
         primary: {
-            background: disabled ? G.accentLo: G.surface,
+            background: disabled ? G.accentLo: active ? G.card: G.surface,
             color: disabled ? G.textSub: G.text,
-            border: "none",
+            border: `1px solid ${active ? G.accent + "88" : "transparent"}`,
         },
         ghost: {
-            background: "transparent",
+            background: active ? G.border + "22" : "transparent",
             color: G.text,
             border: `1px solid ${G.border}66`,
         },
@@ -50,12 +53,15 @@ export function Button({children, onClick, disabled, variant = "primary", style}
         <button
             onClick={onClick}
             disabled={disabled}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             style={{
                 padding: "10px 20px", borderRadius: 8,
                 fontFamily: fonts.display, fontWeight: 700, fontSize: 14,
                 cursor: disabled ? "not-allowed": "pointer",
                 display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-                transition: "opacity 0.15s",
+                transition: "all 0.18s",
+                transform: active ? "translateY(-3px)" : "none",
                 ...variants[variant],
                 ...style,
             }}

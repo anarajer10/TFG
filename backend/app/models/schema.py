@@ -18,7 +18,6 @@ class New(BaseModel):
 
 """
 # Son modelos de Pydantic
-# A LO MEJOR A LA LARGA SE AÑADEN MÁS COSAS
 
 # ENUMERADOS
 # Enumerado para etiqueta (y resultado también)
@@ -34,6 +33,7 @@ class ImagenEnum(str, enum.Enum):
     fuera_contexto = "fuera_contexto"
     generada_ia = "generada_ia"
 
+# Medio de comunicación de la noticia dada
 class FuenteBase(SQLModel):
     nombre: str
     url: str = Field(unique=True, index=True) # URL de la pág web (que no se repiten)
@@ -48,6 +48,7 @@ class FuentePublic(FuenteBase):
 class FuenteCreate(FuenteBase):
     pass
 
+# Noticia almacenada en la BD, con texto_url único para evitar duplicados
 class NoticiaBase(SQLModel):
     #Para añadir más validaciones, con Field
     titulo: str = Field(min_length=10)
@@ -56,8 +57,8 @@ class NoticiaBase(SQLModel):
     categoria: str | None = None              # None si la noticia está pendiente
     # source: str
     fecha_publi: datetime | None = None       # Fecha publicación
-    texto_url: str = Field(unique=True, index=True) # URL de la pág web (que no se repiten)
-    imagen_url: str | None = None             # Para las imágenes
+    texto_url: str = Field(unique=True, index=True) # URL de la pág web (que no se repiten, impide analizar dos veces la misma URL)
+    imagen_url: str | None = Field(sa_column=Column(TEXT)) # Para las imágenes
     etiqueta: EtiquetaEnum = Field(default=EtiquetaEnum.pendiente) # Pendiente por defecto, si no se clasifica en V o F
     fuente_id: int | None = Field(default=None, foreign_key="fuente.id") # FK a Fuente para ligar una noticia a su fuente
 
@@ -82,9 +83,9 @@ class NewUpdate(NewBase):
     category: str | None = None
     source: str | None = None
 """
-
+# Resultado del análisis de una noticia
 class ValoracionBase(SQLModel): #Cambio de BaseModel a SQLModel
-    noticia_id: int | None = Field(default=None, foreign_key="noticia.id", unique=True) # FK a noticia para ligarla a su valoracion
+    noticia_id: int | None = Field(default=None, foreign_key="noticia.id", unique=True) # FK a noticia para ligarla a su valoracion, una sola valoración por noticia
     # title: str
     # category: str
     resultado: EtiquetaEnum = Field(default=EtiquetaEnum.pendiente)
@@ -102,6 +103,7 @@ class ValoracionPublic(ValoracionBase):
     id: int
     fecha_analisis: datetime 
 
+# Respuesta combinada que devuelve la API (noticia + valoracion + nombre fuente)
 class AnalisisResultado(SQLModel):
     noticia: NoticiaPublic
     valoracion: ValoracionPublic

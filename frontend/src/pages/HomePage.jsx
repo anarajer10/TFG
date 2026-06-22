@@ -1,4 +1,5 @@
 import { theme as G, fonts } from "../constants/theme";
+import { useState } from "react";
 import { Button } from "../components/ui";
 import HootLogo from "../assets/hoot_logo.svg?react";
 import ComicHootProp1 from "../assets/comicHootProp1.svg?react";
@@ -11,10 +12,13 @@ import { translation } from "../constants/i18n";
 
 export default function HomePage({ setPage, lang }) {
     const t = translation[lang].home;
+    const [hoveredFeat, setHoveredFeat] = useState(null);
+    const [hoveredStep, setHoveredStep] = useState(null);
+    const [hoveredProp, setHoveredProp] = useState(null)
 
     return (
         <div style={{ minHeight: "100vh", background: G.bg }}>
-            {/*Hero*/}
+            {/*Logo, título, eslogan y botones de acceso rápido*/} 
             <section style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 justifyContent: "center", minHeight: "calc(100vh-56px)",
@@ -53,7 +57,7 @@ export default function HomePage({ setPage, lang }) {
             </section>
 
             {/*Propósito*/}
-            <section style={{ padding: "60px 24px", maxWidth: 900, margin: "0 auto" }}>
+            <section style={{ padding: "0 24px 32px", maxWidth: 1100, margin: "0 auto" }}>
                 <h2 style={{
                     fontFamily: fonts.display, fontWeight: 800, fontSize: 28, letterSpacing: "-0.03em",
                     color: G.text, marginBottom: 40, textAlign: "center",
@@ -66,8 +70,12 @@ export default function HomePage({ setPage, lang }) {
                         { Dibujo: ComicHootProp2, desc: t.prop2Desc },
                         { Dibujo: ComicHootProp3, desc: t.prop3Desc },
                     ].map(({Dibujo, desc}, i) => (
-                        <div key={i} style={{ textAlign: "center" }}>
-                            <Dibujo style={{ width: "100%", height: "auto", maxHeight: 220 }}/>
+                        <div key={i} 
+                        onMouseEnter={() => setHoveredProp(i)}
+                        onMouseLeave={() => setHoveredProp(null)}
+                        style={{ textAlign: "center", transition: "all 0.2s", padding: "0 16px",
+                        transform: hoveredProp === i ? "translateY(-8px)" : "none" }}>
+                            <Dibujo style={{ width: "100%", height: "auto", minHeight: 120, maxHeight: 240 }}/>
                             <div style={{
                                 fontFamily: fonts.display, fontWeight: 700,
                                 color: G.text, marginBottom: 12, fontSize: 15,
@@ -79,17 +87,22 @@ export default function HomePage({ setPage, lang }) {
                 </div>
             </section>
 
-            {/*Features*/}
-            <section style={{ padding: "80px 24px", maxWidth: 900, margin: "0 auto" }}>
+            {/*Features (características principales del sistema, que son el análisis de texto, de imagen y
+            la explicación automática*/}
+            <section style={{ padding: "80px 24px", maxWidth: 1100, margin: "0 auto" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
                     {[
                         { icon: "≡", color: G.accent, title: t.feat1Title, desc: t.feat1Desc },
                         { icon: "▣", color: G.ok, title: t.feat2Title, desc: t.feat2Desc },
                         { icon: "◈", color: G.warn, title: t.feat3Title, desc: t.feat3Desc },
                     ].map(({ icon, color, title, desc }) => (
-                        <div key={title} style={{
-                            background: G.surface, border: `1px solid ${G.border}`,
-                            borderRadius: 16, padding: "28px 24px",
+                        <div key={title}
+                        onMouseEnter={() => setHoveredFeat(title)}
+                        onMouseLeave={() => setHoveredFeat(null)}
+                        style={{
+                            background: G.surface, border: `1px solid ${hoveredFeat === title ? color : G.border}`,
+                            borderRadius: 16, padding: "28px 24px", transition: "all 0.2s", 
+                            transform: hoveredFeat === title ? "translateY(-8px)" : "none",
                         }}>
                             <div style={{
                                 width: 44, height: 44, borderRadius: 10,
@@ -114,7 +127,7 @@ export default function HomePage({ setPage, lang }) {
             </section>
 
             {/*Cómo funciona*/}
-            <section style={{ padding: "0 24px 32px", maxWidth: 900, margin: "0 auto" }}>
+            <section style={{ padding: "0 24px 32px", maxWidth: 1100, margin: "0 auto" }}>
                 <h2 style={{
                     fontFamily: fonts.display, fontWeight: 800, fontSize: 28,
                     letterSpacing: "-0.03em", color: G.text, marginBottom: 40, textAlign: "center",
@@ -127,7 +140,11 @@ export default function HomePage({ setPage, lang }) {
                         { n: "02", title: t.step2Title, desc: t.step2Desc, Dibujo: ComicHoot2Paso2 },
                         { n: "03", title: t.step3Title, desc: t.step3Desc, Dibujo: ComicHoot2Paso3 },
                     ].map(({ n, title, desc, Dibujo }) => (
-                        <div key={n} style={{ textAlign: "center", padding: "0 16px" }}>
+                        <div key={n} 
+                        onMouseEnter={() => setHoveredStep(n)}
+                        onMouseLeave={() => setHoveredStep(null)}
+                        style={{ textAlign: "center", padding: "0 16px", transition: "all 0.2s", 
+                        transform: hoveredStep === n ? "translateY(-8px)" : "none" }}>
                             <div style={{
                                 fontFamily: fonts.mono, fontSize: 40, fontWeight: 700,
                                 color: G.accent + "55", marginBottom: 12, lineHeight: 1,
@@ -140,16 +157,16 @@ export default function HomePage({ setPage, lang }) {
                             }}>
                                 {desc}
                             </div>
-                            <Dibujo style={{ width: "100%", height: "auto" }}/>
+                            <Dibujo style={{ width: "100%", height: "auto", minHeight: 100, maxHeight: 240 }}/>
                         </div>
                     ))}
                 </div>
             </section>
 
-            {/*Stats*/}
+            {/*Estadísticas del sistema*/}
             <section style={{ borderTop: `1px solid ${G.border}`, padding: "40px 24px" }}>
                 <div style={{
-                    maxWidth: 900, margin: "0 auto",
+                    maxWidth: 1100, margin: "0 auto",
                     display: "flex", justifyContent: "center", gap: 56, flexWrap: "wrap",
                 }}>
                     {[

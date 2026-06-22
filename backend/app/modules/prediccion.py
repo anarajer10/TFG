@@ -58,6 +58,7 @@ def _cargar_modelo(lang: str) -> bool:
         logger.error(f"Error cargando el modelo '{lang}': {e}")
         return False
     
+# En español (ES) se ha entrenado con texto crudo y en inglés (EN) con stemming + stopwords
 def _preproc(texto, lang):
     if lang == "es":
         return texto

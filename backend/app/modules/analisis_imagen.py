@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 HF_MODEL_URL = "https://router.huggingface.co/hf-inference/models/Nahrawy/AIorNot"
 
+# Umbrales empíricos para la clasificación de imágenes
 ELA_QUALITY = 90
 ELA_THRESHOLD = 15      # Umbral para considerar la manipulación de una imagen
 AI_THRESHOLD = 0.80     # Umbral de confianza para considerar a una imagen como hecha por IA

@@ -25,8 +25,10 @@ const globalCss = `
 
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-`;
+  :focus-visible { outline: 2px solid ${G.accent}; outline-offset: 3px; border-radius: 4px; }
+  `;
 
+// Componente raíz que gestiona el enrutamiento por hash de URL y el estado global de sesión
 export default function App(){
   const parseHash = () => {
     const hash = window.location.hash.replace('#', '') || 'home';
@@ -76,21 +78,22 @@ export default function App(){
     setPage(newPage);
   }
 
+  // Lanza el análisis y navega a #result mientras el hook useAnalysis procesa la petición
   function handleAnalyze(formData){
     analyze({...formData, lang});
     window.location.hash = 'result';
     setPage("result");
   }
 
+  // Navega al resultado de una noticia ya analizada (desde el historial en Dashboard o en Recientes)
   function handleSelectResult(r){
     setSelectedResult(r);
     window.location.hash = `result/${r.valoracion.noticia_id}`;
     setPage("result");
   }
   
-  // Luego cambiar con React Router
   return(
-    <div style={{ minHeight: "100vh", background: G.bg }}>
+    <div style={{ minHeight: "100vh", background: G.bg, minWidth: "fit-content" }}>
       <Navbar
         page={page === "result" ? "analyze" : page } 
         setPage={handleNavChange} 

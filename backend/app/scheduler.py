@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler()
 
+# Ejecuta todos los scrapers en orden y luego analiza las noticias pendientes acumuladas
 def _run_scrapers():
     run_scraper_RTVE(limit=20)
     run_scraper_Newtral(limit=20)
@@ -23,6 +24,7 @@ def _run_scrapers():
     run_scraper_TheIndependent(limit=20)
     analizar_noticias_pendientes(limit=100)
 
+# Arranca el scheduler en segundo plano
 def start_scheduler():
     # Se hará el scraping una vez cada 24 horas
     scheduler.add_job(_run_scrapers, "interval", hours=24)

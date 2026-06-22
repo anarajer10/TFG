@@ -216,8 +216,8 @@ def generar_explicacion(resultado_imagen: dict, resultado_texto: dict, titulo: s
                 "model": OLLAMA_MODEL,
                 "prompt": prompt,
                 "stream": False,
-                "options": {"temperature": 0.3, "num_predict": 1024},
-                "keep_alive": "5m"
+                "options": {"temperature": 0.3, "num_predict": 1024}, # temperatura baja para reducir alucinaciones
+                "keep_alive": "5m" # mantiene el modelo cargado en memoria entre llamadas consecutivas
             },
             timeout=180
         )

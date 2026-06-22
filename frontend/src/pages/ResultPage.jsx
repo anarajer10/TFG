@@ -5,11 +5,14 @@ import { MetricBar, ScoreDial } from "../components/shared";
 import { clamp, imagenMeta, sentimientoLabel, confianzaLabel, formatFecha } from "../utils/formatters";
 import { translation } from "../constants/i18n";
 
+// Muestra el resultado completo de un análisis (veredicto, análisis de texto e imagen, explicación de LLM y metadatos)
 export default function ResultPage({ result, onBack, lang }) {
     const { valoracion, noticia, fuente_nombre } = result;
     const t = translation[lang].result;
     const [copiado, setCopiado] = useState(false);
 
+    // Si la probabilidad está entre 0,4 y 0,6 (sobre 1), se muestra como INDETERMINADA
+    // aunque se haya clasificado como VERDADERA o FALSA
     const vMeta = (() => {
         const m = {
             falsa: { label: t.falsa, color: G.danger, bg: G.dangerLo, icon: "✕" },
@@ -24,12 +27,13 @@ export default function ResultPage({ result, onBack, lang }) {
     const conf = confianzaLabel(valoracion.probabilidad);
     const imgM = imagenMeta(valoracion.estatus_analisis_imagen);
 
-    // normlaización a [0,1] de punt_sentimiento
+    // normalización a [0,1] de punt_sentimiento para el dial visual
+    // punt_objetividad invertido para que el dial muestre subjetividad
     const sentNorm = clamp((parseFloat(valoracion.punt_sentimiento) + 1) / 2, 0, 1);
     const objScore = clamp(1 - parseFloat(valoracion.punt_objetividad ?? 0), 0, 1);
 
     return (
-        <div style={{ maxWidth: 820, margin: "0 auto", padding: "36px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 24px" }}>
             {/*Veredicto*/}
             <div style={{
                 background: vMeta.bg, border: `1px solid ${vMeta.color}44`,
@@ -162,6 +166,8 @@ export default function ResultPage({ result, onBack, lang }) {
                         <SectionTitle>{t.xaiTitle}</SectionTitle>
                         <Pill color={G.accent}>Llama 3.2</Pill>
                     </div>
+                    {/*El LLM devuelve texto con secciones en negrita (**Titulo**) y se parsea 
+                    para mostrar cada sección con su título destacado en vez de un texto plano continuo del tirón*/}
                     {(() => {
                         const parts = valoracion.explicacion.split(/\*\*(.*?)\*\*/);
                         const sections = [];
